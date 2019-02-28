@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'zoo.apps.ZooConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

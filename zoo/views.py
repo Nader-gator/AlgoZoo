@@ -1,5 +1,7 @@
 from django.shortcuts import render
-from django.http import HttpResponse
 
 def home(request):
-  return HttpResponse('<h1>Zoo Home</h1>')
+  return render(request, 'zoo/home.html')
+
+def bubble_sort(request):
+  return render(request, 'zoo/bubblesort.html')
