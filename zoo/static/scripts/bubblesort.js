@@ -6,6 +6,9 @@ const canvas = d3.select(".bubble-sort").append("svg")
 
 
 
+
+
+  
 function swap(array, i, j) {
   var temp = array[i];
   array[i] = array[j];
@@ -13,17 +16,18 @@ function swap(array, i, j) {
 }
 function bubbleSort(array) {
   var swapped = true;
-  var swaps = []
+  let swaps = []
   while (swapped) {
     swapped = false;
     for (var i = 0; i < array.length; i++) {
       if (array[i] && array[i + 1] && array[i] > array[i + 1]) {
         swap(array, i, i + 1);
-        swaps.push([i,i+1])
+        swaps.push([i,i+1]);
         swapped = true;
       }
     }
-  } 
-  return array;
+  }
+  return swaps;
 }
+
 }
