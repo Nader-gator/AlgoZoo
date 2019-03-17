@@ -23,7 +23,7 @@ function runD3(){
         .range(['red','green','blue']),
       heightScale = d3.scaleLinear()
         .domain([0,n-1])
-        .range([50,200])
+        .range([50,250])
 
   var lines = canvas.append("g")
     .attr("class", "line")
