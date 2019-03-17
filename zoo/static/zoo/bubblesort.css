@@ -3,6 +3,9 @@
   stroke-width: 1.5px;
   stroke-linecap: round;
 }
+.underline {
+  stroke-width: 3px;
+}
 
 div {
   display: flex;
