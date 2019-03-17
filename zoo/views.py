@@ -5,3 +5,6 @@ def home(request):
 
 def bubble_sort(request):
   return render(request, 'zoo/bubblesort.html')
+
+def quick_sort(request):
+  return render(request,'zoo/quicksort.html')
