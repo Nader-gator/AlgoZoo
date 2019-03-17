@@ -34,14 +34,14 @@ function runD3(){
     .attr('transform', transform)
     .attr('stroke', color)
 
-    var underline = canvas.append("g")
-      .data(swaps)
-      .attr("class","underline")
-      .append("line")
-      .attr("x2",xScale(1)+10)
-      .attr("x1",xScale(0)-10)
-      .attr("transform","translate(0,10)")
-      .attr("stroke","red")
+  var underline = canvas.append("g")
+    .data(swaps)
+    .attr("class","underline")
+    .append("line")
+    .attr("x2",xScale(1)+10)
+    .attr("x1",xScale(0)-10)
+    .attr("transform","translate(0,10)")
+    .attr("stroke","red")
 
 
   function transform(d,i){
