@@ -50,6 +50,30 @@ function runD3() {
 
 
   function mergeSort(array){
+    function merge(left, right) {
+      result = []
+      while (left.length && right.length){
+        switch (right[0] <= left[0]) {
+          case true:
+            result.push(right.shift())
+            break;
+          case false:
+            result.push(left.shift())
+        }
+      }
+      return result.concat(left).concat(right)
+    }
 
+    function split(array){
+      if (array.length < 2) return array;
+      let middlePoint = array.length >> 1,
+      left = array.slice(0,middlePoint),
+      right = array.slice(middlePoint)
+
+      return merge(split(left),split(right))
+    }
+
+    return split(array)
   }
+  debugger
 }
