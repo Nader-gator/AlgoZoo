@@ -20,7 +20,7 @@ function runD3() {
     .range([0, 600]),
     rainbow = d3.scaleLinear()
     .domain([0, n / 2, n - 1])
-    .range(['red', 'green', 'blue']),
+    .range(['blue', 'purple', 'orange']),
     heightScale = d3.scaleLinear()
     .domain([0, n - 1])
     .range([50, 250])
@@ -47,7 +47,7 @@ function runD3() {
   }
 
   var transition = d3.transition().delay(200)
-    .duration(650)
+    .duration(450)
     .on("start", function start() {
       var move = moves.pop()
       if (move.type === "swap"){
@@ -78,7 +78,6 @@ function runD3() {
 
   function grayOut(move){
     lines.attr('class',function(d,i){
-      debugger
       if (i < move.left || move.right < i){
         return 'greyed'
       } else if (i === move.pivotPoint){
@@ -88,7 +87,7 @@ function runD3() {
   }
 
   function colorizeAll(){
-
+    lines.attr('class',null)
   }
 
 function quickSort(array){
@@ -96,9 +95,10 @@ function quickSort(array){
 
   function swap(i, j) {
     if (i === j) return;
-    var temp = array[i];
-    array[i] = array[j];
-    array[j] = temp;
+    var temp = array[i]
+    array[i] = array[j]
+    array[j] = temp
+
     moves.push({type: "swap", first: i, second: j});
   }
 
@@ -112,6 +112,16 @@ function quickSort(array){
     }
     swap(left,right)
     return left
+  }
+
+  function removeDups(moves){
+    for (let i = 0; i < moves.length - 1; i++) {
+      if (moves[i].type === 'split' || moves[i+1].type === 'split') {continue}
+      if (moves[i].first === moves[i+1].first &&
+          moves[i].second === moves[i + 1].second
+        ){ moves.splice(i,2)}
+    }
+    return moves
   }
 
   function split(left,right){
@@ -130,6 +140,6 @@ function quickSort(array){
   }
 
   split(0,array.length)
-  return moves
+  return removeDups(moves)
 }
 }
