@@ -32,7 +32,7 @@ function runD3() {
     .enter().append('line')
     .attr('y2', heightT)
     .attr('transform', transform)
-    // .attr('stroke', color)
+    .attr('stroke', color)
 
   function transform(d, i) {
     return `translate(${xScale(i)})`
