@@ -8,3 +8,6 @@ def bubble_sort(request):
 
 def quick_sort(request):
   return render(request,'zoo/quicksort.html')
+
+def merge_sort(request):
+  return render(request, 'zoo/mergesort.html')
