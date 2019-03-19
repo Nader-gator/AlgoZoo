@@ -2,24 +2,9 @@ document.addEventListener("DOMContentLoaded", runD3)
 
 function runD3() {
   var width = 800,
-    height = 500 / 3;
+    height = 600;
 
   var layer0 = d3.select(".merge-sort").append("svg")
-    .attr('width', width)
-    .attr("height", height)
-    .append('g')
-    .attr('transform', `translate(100,100)`)
-  var layer1 = d3.select(".merge-sort").append("svg")
-    .attr('width', width)
-    .attr("height", height)
-    .append('g')
-    .attr('transform', `translate(100,100)`)
-  var layer2 = d3.select(".merge-sort").append("svg")
-    .attr('width', width)
-    .attr("height", height)
-    .append('g')
-    .attr('transform', `translate(100,100)`)
-  var layer3 = d3.select(".merge-sort").append("svg")
     .attr('width', width)
     .attr("height", height)
     .append('g')
@@ -31,15 +16,18 @@ function runD3() {
     xScale = d3.scaleLinear()
     .domain([0, n - 1])
     .range([0, 600]),
+    yScale = d3.scaleLinear()
+    .domain([0, 3])
+    .range([0, 600]),
     rainbow = d3.scaleLinear()
     .domain([0, n / 2, n - 1])
-    .range(['red', 'green', 'blue']),
+    .range(['red', 'blue']),
     heightScale = d3.scaleLinear()
     .domain([0, n - 1])
     .range([10, 50 ])
 
 
-  var lines = layer0.append("g")
+  var lines0 = layer0.append("g")
     .attr("class", "line")
     .selectAll('rect')
     .data(array)
@@ -51,7 +39,7 @@ function runD3() {
     .attr('fill', color)
 
   function transform(d, i) {
-    return `translate(${xScale(i)})`
+    return `translate(${xScale(i)},${yScale(d.layer)})`
   }
 
   function color(d) {
@@ -65,15 +53,25 @@ function runD3() {
 
   function mergeSort(array){
     var moves = []
-    function merge(left, right) {
+    function merge(left, right,layer) {
       result = []
       while (left.length && right.length){
         switch (right[0] <= left[0]) {
           case true:
             result.push(right.shift())
+            moves.push({
+              type: "merge",
+              side: "right",
+              layer: layer
+            })
             break;
           case false:
             result.push(left.shift())
+            moves.push({
+              type: "merge",
+              side: "left",
+              layer: layer
+            })
         }
       }
       return result.concat(left).concat(right)
@@ -89,9 +87,10 @@ function runD3() {
         middlePoint: middlePoint,
         layer: layer
       })
-      return merge(split(left,layer+1),split(right,layer+1))
+      return merge(split(left,layer+1),split(right,layer+1),layer)
     }
    split(array)
    return moves
   }
+  // debugger
 }
