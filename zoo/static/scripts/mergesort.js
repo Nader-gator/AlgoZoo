@@ -12,7 +12,7 @@ function runD3() {
 
   var n = 8,
     array = d3.shuffle(d3.range(n)),
-    moves = mergeSort(array.slice()),
+    moves = mergeSort(array.slice()).reverse(),
     xScale = d3.scaleLinear()
     .domain([0, n - 1])
     .range([0, 600]),
@@ -24,9 +24,9 @@ function runD3() {
     .range(['red', 'blue']),
     heightScale = d3.scaleLinear()
     .domain([0, n - 1])
-    .range([10, 50 ])
+    .range([10, 50 ]);
 
-
+    debugger
   var lines0 = layer0.append("g")
     .attr("class", "line")
     .selectAll('rect')
@@ -50,6 +50,28 @@ function runD3() {
     return heightScale(d)
   }
 
+  var transition = d3.transition()
+    .duration(450)
+    .on("start", function start() {
+      var move = moves.pop()
+      if (move.type === "merge") {
+        swapBox(move)
+      } else if (move.type === "split") {
+        horizontalSplit(move)
+      }
+
+      if (moves.length) {
+        transition = transition.transition().on('start', start)
+      }
+    })
+
+  function swapBox(move){
+
+  }
+
+  function horizontalSplit(move){
+    
+  }
 
   function mergeSort(array){
     var moves = []
