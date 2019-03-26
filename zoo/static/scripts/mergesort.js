@@ -11,14 +11,19 @@ function runD3() {
     .attr('transform', `translate(100,100)`)
 
   var n = 8,
-    array = d3.shuffle(d3.range(n)),
-    moves = mergeSort(array.slice()).reverse(),
+    array = d3.shuffle(d3.range(n)).map((el, i) => {
+      return {
+        layer: 0,
+        value: el,
+        index: i
+      }
+    }),
     xScale = d3.scaleLinear()
     .domain([0, n - 1])
     .range([0, 600]),
     yScale = d3.scaleLinear()
     .domain([0, 3])
-    .range([0, 600]),
+    .range([0, 400]),
     rainbow = d3.scaleLinear()
     .domain([0, n / 2, n - 1])
     .range(['red', 'blue']),
@@ -26,8 +31,8 @@ function runD3() {
     .domain([0, n - 1])
     .range([10, 50 ]);
 
-    debugger
-  var lines0 = layer0.append("g")
+
+  var lines = layer0.append("g")
     .attr("class", "line")
     .selectAll('rect')
     .data(array)
@@ -39,80 +44,77 @@ function runD3() {
     .attr('fill', color)
 
   function transform(d, i) {
-    return `translate(${xScale(i)},${yScale(d.layer)})`
+    return `translate(${xScale(d.index)},${yScale(d.layer)})`
   }
 
   function color(d) {
-    return rainbow(d)
+    return rainbow(d.value)
   }
 
   function heightT(d) {
-    return heightScale(d)
+    return heightScale(d.value)
   }
 
   var transition = d3.transition()
-    .duration(450)
     .on("start", function start() {
-      var move = moves.pop()
-      if (move.type === "merge") {
-        swapBox(move)
-      } else if (move.type === "split") {
-        horizontalSplit(move)
-      }
+      // var move = moves.pop()
+      // if (move.type === "merge") {
+      //   swapBox(move)
+      // } else if (move.type === "split") {
+      //   horizontalSplit(move)
+      // }
 
-      if (moves.length) {
-        transition = transition.transition().on('start', start)
-      }
+      // if (moves.length) {
+      //   transition = transition.transition().on('start', start)
+      // }
+      mergeSort(array,transition)
     })
 
-  function swapBox(move){
+  function mergeSort(array,transition){
 
-  }
-
-  function horizontalSplit(move){
-    
-  }
-
-  function mergeSort(array){
-    var moves = []
-    function merge(left, right,layer) {
-      result = []
+    function merge(left, right) {
+      let result = []
       while (left.length && right.length){
-        switch (right[0] <= left[0]) {
+        switch (right[0].value <= left[0].value) {
           case true:
             result.push(right.shift())
-            moves.push({
-              type: "merge",
-              side: "right",
-              layer: layer
-            })
             break;
           case false:
             result.push(left.shift())
-            moves.push({
-              type: "merge",
-              side: "left",
-              layer: layer
-            })
         }
       }
-      return result.concat(left).concat(right)
+      result = result.concat(left).concat(right).map(el => {
+        el.layer -= 1
+        return el
+      })
+      debugger
+      // transition.each(function () {
+      //   lines.transition().attr('transform', transform)
+      // })
+      return result
     }
 
-    function split(array ,layer = 0){
+    function split(array){
+      transition.each(function () {
+        lines.transition().duration(1000).attr('transform', transform)
+      })
       if (array.length < 2) return array;
       let middlePoint = array.length >> 1,
       left = array.slice(0,middlePoint),
-      right = array.slice(middlePoint)
-      moves.push({
-        type: "split",
-        middlePoint: middlePoint,
-        layer: layer
+      right = array.slice(middlePoint);
+      debugger
+      left = left.map(el=>{
+        el.layer += 1
+        return el
       })
-      return merge(split(left,layer+1),split(right,layer+1),layer)
+      right = right.map(el=>{
+        el.layer += 1
+        return el
+      })
+      debugger
+      return merge(split(left),split(right))
     }
-   split(array)
-   return moves
+   return split(array)
   }
-  // debugger
+  
 }
