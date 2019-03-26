@@ -58,19 +58,10 @@ function runD3() {
       
       if (moves.length) {
         transition = transition.transition().on('start', start)
-      } else {
-        colorizeAll()
       }
     })
 
   function swapBars(move){
-    var i = move.first,
-        j = move.second,
-        lineI = lines._groups[0][i],
-        lineJ = lines._groups[0][j];
-
-    lines._groups[0][i] = lineJ
-    lines._groups[0][j] = lineI
     transition.each(function () {
       lines.transition().attr('transform', transform)
     })
