@@ -54,23 +54,17 @@ function runD3() {
   function heightT(d) {
     return heightScale(d.value)
   }
+    function range(array){
+      ranges = []
+      for (let i = 0; i < array.length; i++) {
+        ranges.push(i)
+      }
+      return ranges
+    }
 
-  var transition = d3.transition()
-    .on("start", function start() {
-      // var move = moves.pop()
-      // if (move.type === "merge") {
-      //   swapBox(move)
-      // } else if (move.type === "split") {
-      //   horizontalSplit(move)
-      // }
+  
 
-      // if (moves.length) {
-      //   transition = transition.transition().on('start', start)
-      // }
-      mergeSort(array,transition)
-    })
-
-  function mergeSort(array,transition){
+  function mergeSort(mainArray){
 
     function merge(left, right) {
       let result = []
@@ -83,38 +77,29 @@ function runD3() {
             result.push(left.shift())
         }
       }
-      result = result.concat(left).concat(right).map(el => {
-        el.layer -= 1
-        return el
-      })
-      debugger
-      // transition.each(function () {
-      //   lines.transition().attr('transform', transform)
+      // result = result.concat(left).concat(right).map(el => {
+      //   el.layer -= 1
+      //   return el
       // })
+      
+      // lines.transition().duration(10000).attr('transform', transform)
       return result
     }
 
-    function split(array){
-      transition.each(function () {
-        lines.transition().duration(1000).attr('transform', transform)
-      })
+    function split(array,modifier = 0){
+      debugger
+      lines.transition().duration(1000).attr('transform', transform)
       if (array.length < 2) return array;
       let middlePoint = array.length >> 1,
       left = array.slice(0,middlePoint),
       right = array.slice(middlePoint);
-      debugger
-      left = left.map(el=>{
-        el.layer += 1
-        return el
-      })
-      right = right.map(el=>{
-        el.layer += 1
-        return el
-      })
-      debugger
-      return merge(split(left),split(right))
+      array.forEach(element => {
+        mainArray[element].layer += 1
+      });
+      return merge(split(right),split(left))
     }
-   return split(array)
+   return split(mainArray.map(el => el.index))
   }
-  
+  debugger
+  mergeSort(array)
 }
