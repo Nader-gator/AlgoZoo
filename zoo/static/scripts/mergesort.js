@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", runD3)
 
 function runD3() {
-  var width = 800,
+  var width = 1000,
     height = 600;
 
   var layer0 = d3.select(".merge-sort").append("svg")
@@ -10,33 +10,39 @@ function runD3() {
     .append('g')
     .attr('transform', `translate(100,100)`)
 
-  var n = 8,
-    array = d3.shuffle(d3.range(n)).map((el, i) => {
+  var n = 10,
+  //   data = [3,1,2,4].map((el, i) => {
+  //     return {
+  //       layer: 0,
+  //       value: el,
+  //       index: i
+  //     }
+  //   }),
+    data = d3.shuffle(d3.range(n)).map((el, i) => {
       return {
         layer: 0,
         value: el,
         index: i
       }
     }),
-    moves = mergeSort(array.slice()),
+    moves = mergeSort(data.slice()),
     xScale = d3.scaleLinear()
     .domain([0, n - 1])
-    .range([0, 600]),
+    .range([0, 700]),
     yScale = d3.scaleLinear()
-    .domain([0, 3])
+    .domain([0, n/2 -1])
     .range([0, 400]),
     rainbow = d3.scaleLinear()
     .domain([0, n / 2, n - 1])
     .range(['red', 'blue']),
     heightScale = d3.scaleLinear()
     .domain([0, n - 1])
-    .range([10, 50 ]);
-
-
-  var lines = layer0.append("g")
+    .range([10, 70 ]);
+    data = data.map((el)=>{el.layer=0;return el}),
+    lines = layer0.append("g")
     .attr("class", "line")
     .selectAll('rect')
-    .data(array)
+    .data(data)
     .enter().append('rect')
     .attr('width', heightT)
     .attr('height', heightT)
@@ -57,7 +63,7 @@ function runD3() {
   }
   moves = moves.filter((el)=> el.type === "split").concat(moves.filter((el)=> el.type === "swap"))
   var transition = d3.transition()
-    .duration(350)
+    .duration(550)
     .on("start", function start() {
       var move = moves.shift()
       if (move.type === "swap") {
@@ -72,44 +78,99 @@ function runD3() {
     })
 
   function makeSplit(move){
-    array.forEach((element,i) => {
-      if (i > move.startPoint && i < move.endPoint){
+    data.forEach((element,i) => {
+      if (i >= move.startPoint && i < move.endPoint){
         element.layer += 1
       }
     });
     transition.each(function () {
-      lines.transition().attr('transform', transform)
+      
+      lines.transition()
+      .duration(500)
+      .attr('transform', transform)
     })
   }
 
   function makeSwap(move){
-    debugger
-    var temp = array[move.first].index
-    array[move.first].index = array[move.second].index
-    array[move.second].index = temp
+    data.forEach((element, i) => {
+      if (i >= move.start && i < move.end) {
+        element.layer -= 1
+      }
+    });
+    for (let i = move.start; i < move.end; i++) {
+      for (let j = move.start; j < move.end; j++) {
+        if (move.snapShot[i - move.start].value === data[j].value){
+          data[j].index = move.snapShot[i-move.start].index + move.start
+        }
+      }
+
+    }
 
     transition.each(function () {
-      lines.transition().attr('transform', transform)
+      lines.transition()
+      .duration(500)
+      .attr('transform', transform)
     })
   }
 
 
  function mergeSort(array){
-    var moves = []
-    function merge(left,right,layer,reference) {
+
+  var moves = []
+    function merge(left,right,start,end) {
       // debugger
-      let unsorted = left.concat(right),
-      sorted = unsorted.slice().sort((a,b)=>{return a.value - b.value })
-      addDif(unsorted,sorted,reference)
-      return sorted
+      // let result = []
+      // position = reference,
+      // leftFrom = reference,
+      // rightfrom = reference+left.length;
+      // debugger
+      // while (left.length && right.length) {
+      //   switch (right[0].value <= left[0].value) {
+      //     case true:
+      //       result.push(right.shift())
+      //       moves.push({
+      //         type: "swap",
+      //         // layer: layer,
+      //         from: rightfrom,
+      //         to: position
+      //       })
+      //       position++
+      //       rightfrom++
+      //       break;
+      //     case false:
+      //       result.push(left.shift())
+      //       moves.push({
+      //         type: "swap",
+      //         // layer: layer,
+      //         from: leftFrom,
+      //         to: position
+      //       })
+      //       leftFrom++
+      //       position++
+      //   }
+      // }
+      let result = left.concat(right).sort((a,b)=>{return a.value-b.value})
+      let fixedIndexes = []
+      for (let i = 0; i < result.length; i++) {
+        fixedIndexes.push({
+          layer: result[i].layer,
+          value: result[i].value,
+          index: i,
+        })
+      }
+      moves.push({
+        type: "swap",
+        start: start,
+        end: end,
+        snapShot: fixedIndexes
+      })
+      // debugger
+      return result
     }
 
-
-    function addDif(unsorted,sorted,reference){
-      debugger
-    }
     function split(array ,layer = 0,reference = 0,endpoint = array.length){
       // debugger
+      array.map((el)=>{el.layer = layer;return el})
       if (array.length < 2) return array;
       let middlePoint = array.length >> 1,
       left = array.slice(0,middlePoint),
@@ -121,11 +182,13 @@ function runD3() {
         endPoint: endpoint+reference,
         layer: layer
       })
+
       // debugger
-      return merge(split(left,layer+1,reference),split(right,layer+1,reference+middlePoint),layer,reference)
+      return merge(split(left,layer+1,reference),split(right,layer+1,reference+middlePoint),reference,endpoint+reference)
     }
     // debugger
    split(array)
    return moves
   }
+  debugger
 }
