@@ -10,15 +10,10 @@ function runD3() {
     .append('g')
     .attr('transform', `translate(100,100)`)
 
-  var n = 10,
-  //   data = [3,1,2,4].map((el, i) => {
-  //     return {
-  //       layer: 0,
-  //       value: el,
-  //       index: i
-  //     }
-  //   }),
-    data = d3.shuffle(d3.range(n)).map((el, i) => {
+  var n = 8,
+    // nums = [3,1,2,4]
+    nums = d3.shuffle(d3.range(n)),
+    data = nums.map((el, i) => {
       return {
         layer: 0,
         value: el,
@@ -74,6 +69,13 @@ function runD3() {
 
       if (moves.length) {
         transition = transition.transition().on('start', start)
+      } else {
+        data.map((el)=>{el.layer = 0;return el})
+        transition.each(function () {
+          lines.transition()
+            .duration(500)
+            .attr('transform', transform)
+        })
       }
     })
 
@@ -84,27 +86,31 @@ function runD3() {
       }
     });
     transition.each(function () {
-      
       lines.transition()
       .duration(500)
       .attr('transform', transform)
     })
   }
 
-  function makeSwap(move){
+  // function makeSwap(move){
     data.forEach((element, i) => {
       if (i >= move.start && i < move.end) {
         element.layer -= 1
       }
     });
-    for (let i = move.start; i < move.end; i++) {
-      for (let j = move.start; j < move.end; j++) {
-        if (move.snapShot[i - move.start].value === data[j].value){
-          data[j].index = move.snapShot[i-move.start].index + move.start
-        }
-      }
+  //   for (let i = move.start; i < move.end; i++) {
+  //     for (let j = move.start; j < move.end; j++) {
+  //       if (move.snapShot[i - move.start].value === data[j].value){
+  //         data[j].index = move.snapShot[i-move.start].index + move.start
+  //       }
+  //     }
 
-    }
+  //   }
+// }
+  function makeSwap(move){
+
+    data[move.j].index = move.snapShot.snapShot[move.i-move.snapShot.start].index + move.snapShot.start
+    data[move.j].layer -= 1
 
     transition.each(function () {
       lines.transition()
@@ -112,7 +118,7 @@ function runD3() {
       .attr('transform', transform)
     })
   }
-
+  
 
  function mergeSort(array){
 
@@ -167,7 +173,36 @@ function runD3() {
       // debugger
       return result
     }
-
+    function deConstruct(moves){
+      var result = []
+      let testdata = nums.map((el, i) => {
+          return {
+            layer: 0,
+            value: el,
+            index: i
+          }
+        })
+      moves.forEach(move => {
+        if (move.type === 'swap'){
+          for (let i = move.start; i < move.end; i++) {
+            for (let j = move.start; j < move.end; j++) {
+              if (move.snapShot[i - move.start].value === testdata[j].value) {
+                testdata[j].index = move.snapShot[i - move.start].index + move.start
+                // if(i != j){
+                  result.push({
+                    type: 'swap',
+                    j: j,
+                    i: i,
+                    snapShot: move
+                  })
+                // }
+              }
+            }
+          }
+        }else {result.push(move)}
+        });
+      return result
+    }
     function split(array ,layer = 0,reference = 0,endpoint = array.length){
       // debugger
       array.map((el)=>{el.layer = layer;return el})
@@ -188,7 +223,7 @@ function runD3() {
     }
     // debugger
    split(array)
-   return moves
+   return deConstruct(moves)
   }
   debugger
 }
