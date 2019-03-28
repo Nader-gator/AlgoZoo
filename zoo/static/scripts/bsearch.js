@@ -8,11 +8,18 @@ function runD3() {
     .attr('width', width)
     .attr("height", height)
     .append('g')
-    .attr('transform', `translate(100,300)`)
+    .attr('transform', `translate(100,400)`)
 
   var n = 25,
-    array = d3.shuffle(d3.range(n)),
-    // moves = quickSort(array.slice()).reverse(),
+    target = Math.floor(Math.random() * (n-1)),
+    array = (d3.range(n)),
+    moves = bsearch(array.slice(),target),
+    data = array.map((el) => {
+      return {
+        value: el,
+        type: 'line'
+      }
+    }),
     height = 500,
     width = 800,
     xScale = d3.scaleLinear()
@@ -24,11 +31,10 @@ function runD3() {
     heightScale = d3.scaleLinear()
     .domain([0, n - 1])
     .range([50, 250])
-
   var lines = canvas.append("g")
     .attr("class", "line")
     .selectAll('line')
-    .data(array)
+    .data(data)
     .enter().append('line')
     .attr('y2', heightT)
     .attr('transform', transform)
@@ -39,29 +45,89 @@ function runD3() {
   }
 
   function color(d) {
-    return rainbow(d)
+    return rainbow(d.value)
   }
 
   function heightT(d) {
-    return heightScale(d) * -1
+    return heightScale(d.value) * -1
   }
 
-  var transition = d3.transition().delay(200)
-    .duration(450)
+  var move = moves.shift()
+  if (move.type === "highlight") {
+    setTimeout(() => {
+      // lines._groups[0][move.location].setAttribute('class','target')
+      data[move.location].type = 'target'
+      lines.transition().attr('class', function (d, i) {
+        return d.type
+      })
+    }, 500);
+  }
+  var transition = d3.transition().delay(1500)
+    .duration(1000)
     .on("start", function start() {
-      // var move = moves.pop()
-      // if (move.type === "swap") {
-      //   swapBars(move)
-      // } else if (move.type === "split") {
-      //   grayOut(move)
-      // }
-
-      // if (moves.length) {
-      //   transition = transition.transition().on('start', start)
-      // } else {
-      //   colorizeAll()
-      // }
+      var move = moves.shift()
+      // debugger
+      switch (move.type) {
+        case 'split':
+          for (let i = 0; i < data.length; i++) {
+            // debugger
+            if (i >= move.left && i < move.right){
+              data[i].type = 'grayed'
+            }
+          }
+          break;
+        case 'check':
+          data[move.index].type = 'highlight'
+          break;
+      }
+      debugger
+      transition.each(function(){
+        debugger
+        lines.transition().attr('class',function(d,i){
+          return d.type})
+      })
+      if (moves.length) {
+        transition = transition.transition().on('start', start)
+      }
     })
 
-  
+
+  function bsearch(array,target){
+    let moves = []
+
+    function recurse(array, target,reference = 0) {
+      if (array.length < 1) {
+        return false
+      }
+      let midPoint = array.length >> 1;
+      mid = array[midPoint];
+      moves.push({
+        type: 'check',
+        index: reference + midPoint
+      })
+
+      if (mid === target) {
+        return midPoint
+      }
+      if (target < mid) {
+        moves.push({
+          type: 'split',
+          left: midPoint + reference,
+          right: n
+        })
+        return recurse(array.slice(0, midPoint), target,reference)
+      } else if (target > mid) {
+          moves.push({
+            type: 'split',
+            left: reference,
+            right: reference + midPoint + 1
+          })
+        let search = recurse(array.slice(midPoint + 1), target,reference+midPoint+1)
+        return search === false ? false : search + midPoint + 1
+      }
+    }
+  result = recurse(array,target)
+  moves.unshift({type: 'highlight',location: result})
+  return moves
+  }
 }
