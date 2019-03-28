@@ -3,8 +3,41 @@ document.addEventListener("DOMContentLoaded", runD3)
 function runD3() {
   var width = 1000,
     height = 600;
+  function generateBoxes(n){
+    let result = 0
+    while(n > 1){
+      result += n
+      n /= 2
+    }
+    return result + 1
+  }
+  function layer(boxes){
+    let result = [],
+        layer = 0,
+        capacity = 1,
+        runningcap = 1,
+        overallIndex = 0;
 
-  var layer0 = d3.select(".merge-sort").append("svg")
+    boxes.forEach(el=> {
+      result.push({
+        layer: layer,
+        id: el,
+        layerIndex: capacity - runningcap,
+        occupied: false,
+        size: n/capacity,
+        overallIndex: d3.range(overallIndex, overallIndex+ n/capacity)
+      })
+      runningcap -= 1
+      overallIndex += n/capacity
+      if (runningcap === 0){
+        layer += 1
+        capacity *= 2
+        runningcap = capacity
+      }
+    })
+    return result
+  }
+  var svg = d3.select(".merge-sort").append("svg")
     .attr('width', width)
     .attr("height", height)
     .append('g')
@@ -20,10 +53,17 @@ function runD3() {
         index: i
       }
     }),
+    boxes = layer(d3.range(generateBoxes(n))),
     moves = mergeSort(data.slice()),
     xScale = d3.scaleLinear()
     .domain([0, n - 1])
     .range([0, 700]),
+    boxXScale = d3.scaleOrdinal()
+    .domain(d3.range(n))
+    .range(d3.range(n).map(el=>el*100)),
+    boxSizeScale = d3.scaleOrdinal()
+    .domain(d3.range(n/2))
+    .range([800,400,200,100])
     yScale = d3.scaleLinear()
     .domain([0, n/2 -1])
     .range([0, 400]),
@@ -34,19 +74,46 @@ function runD3() {
     .domain([0, n - 1])
     .range([10, 70 ]);
     data = data.map((el)=>{el.layer=0;return el}),
-    lines = layer0.append("g")
-    .attr("class", "line")
+    lines = svg.append("g")
     .selectAll('rect')
     .data(data)
-    .enter().append('rect')
+    .enter()
+    .append('rect')
     .attr('width', heightT)
     .attr('height', heightT)
     .attr('transform', transform)
     .attr('stroke', color)
-    .attr('fill', color)
+    .attr('fill', color),
+    borderBoxes = svg.append("g")
+    .selectAll('rect')
+    .data(boxes)
+    .enter().append('rect')
+    .attr('width', boxWidth)
+    .attr('height', 80)
+    .attr('transform', boxTransform)
+    .attr('stroke', 'red')
+    .attr('fill', 'none')
+    .attr('display',displayCheck)
+
 
   function transform(d, i) {
-    return `translate(${xScale(d.index)},${yScale(d.layer)})`
+    return `translate(${xScale(d.index) + (100/2) - (heightScale(d.value)/2) },${yScale(d.layer) + (70/2) - (heightScale(d.value)/2)})`
+  }
+
+  function displayCheck(d,i){
+    if (d.occupied){
+      return 'initial'
+    }else{
+      return 'none'
+    }
+  }
+
+  function boxWidth(d,i){
+    return boxSizeScale(d.layer)
+  }
+
+  function boxTransform(d,i){
+    return `translate(${boxXScale(d.layerIndex * (2**((n/2)-(d.layer + 1)))) },${yScale(d.layer) - 5})`
   }
 
   function color(d) {
@@ -59,26 +126,57 @@ function runD3() {
   moves = moves.filter((el)=> el.type === "split").concat(moves.filter((el)=> el.type === "swap"))
   var transition = d3.transition()
     .duration(550)
-    .on("start", function start() {
+    .on("start", start = () => {
+      checkBoxes()
       var move = moves.shift()
       if (move.type === "swap") {
         makeSwap(move)
       } else if (move.type === "split") {
         makeSplit(move)
       }
-
+      checkBoxes()
       if (moves.length) {
         transition = transition.transition().on('start', start)
       } else {
         data.map((el)=>{el.layer = 0;return el})
         transition.each(function () {
           lines.transition()
-            .duration(500)
-            .attr('transform', transform)
+          .duration(500)
+          .attr('transform', transform)
         })
       }
     })
+    // && dataEl.index >= el.layerIndex * el.size && dataEl.index <= (el.layerIndex + el.size)
 
+    function checkCollision(box){
+      for (let i = 0; i < data.length; i++) {
+        const element = data[i];
+        const overallIndex = (element.layer * n) + element.index
+
+        if (box.overallIndex.includes(overallIndex)){
+          return true
+        }
+      }
+
+      return false
+    }
+
+    function checkBoxes(){
+
+      for (let i = 0; i < boxes.length; i++) {
+        const box = boxes[i];
+        if(checkCollision(box) === true){
+          box.occupied = true
+        } else if(checkCollision(box) === false) {
+          box.occupied = false
+        }
+      }
+
+    transition.each(function () {
+      borderBoxes.transition()
+        .attr('display',displayCheck)
+    })
+    }
   function makeSplit(move){
     data.forEach((element,i) => {
       if (i >= move.startPoint && i < move.endPoint){
@@ -92,26 +190,10 @@ function runD3() {
     })
   }
 
-  // function makeSwap(move){
-    data.forEach((element, i) => {
-      if (i >= move.start && i < move.end) {
-        element.layer -= 1
-      }
-    });
-  //   for (let i = move.start; i < move.end; i++) {
-  //     for (let j = move.start; j < move.end; j++) {
-  //       if (move.snapShot[i - move.start].value === data[j].value){
-  //         data[j].index = move.snapShot[i-move.start].index + move.start
-  //       }
-  //     }
-
-  //   }
-// }
   function makeSwap(move){
 
     data[move.j].index = move.snapShot.snapShot[move.i-move.snapShot.start].index + move.snapShot.start
     data[move.j].layer -= 1
-
     transition.each(function () {
       lines.transition()
       .duration(500)
@@ -124,37 +206,7 @@ function runD3() {
 
   var moves = []
     function merge(left,right,start,end) {
-      // debugger
-      // let result = []
-      // position = reference,
-      // leftFrom = reference,
-      // rightfrom = reference+left.length;
-      // debugger
-      // while (left.length && right.length) {
-      //   switch (right[0].value <= left[0].value) {
-      //     case true:
-      //       result.push(right.shift())
-      //       moves.push({
-      //         type: "swap",
-      //         // layer: layer,
-      //         from: rightfrom,
-      //         to: position
-      //       })
-      //       position++
-      //       rightfrom++
-      //       break;
-      //     case false:
-      //       result.push(left.shift())
-      //       moves.push({
-      //         type: "swap",
-      //         // layer: layer,
-      //         from: leftFrom,
-      //         to: position
-      //       })
-      //       leftFrom++
-      //       position++
-      //   }
-      // }
+
       let result = left.concat(right).sort((a,b)=>{return a.value-b.value})
       let fixedIndexes = []
       for (let i = 0; i < result.length; i++) {
@@ -170,7 +222,7 @@ function runD3() {
         end: end,
         snapShot: fixedIndexes
       })
-      // debugger
+
       return result
     }
     function deConstruct(moves){
@@ -204,7 +256,7 @@ function runD3() {
       return result
     }
     function split(array ,layer = 0,reference = 0,endpoint = array.length){
-      // debugger
+
       array.map((el)=>{el.layer = layer;return el})
       if (array.length < 2) return array;
       let middlePoint = array.length >> 1,
@@ -218,12 +270,12 @@ function runD3() {
         layer: layer
       })
 
-      // debugger
+
       return merge(split(left,layer+1,reference),split(right,layer+1,reference+middlePoint),reference,endpoint+reference)
     }
-    // debugger
+
    split(array)
    return deConstruct(moves)
   }
-  debugger
+
 }
