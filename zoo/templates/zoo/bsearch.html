@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script type="text/javascript" src="{% static 'scripts/bsearch.js' %}?{% now 'U' %}"></script>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <style>
+    .line {
+      stroke: #000;
+      stroke-width: 1.5px;
+      stroke-linecap: round;
+    }
+
+    .underline {
+      stroke-width: 3px;
+    }
+
+    div {
+      display: flex;
+      justify-content: center;
+    }
+
+    svg {
+      padding: 0 100px 0 100px;
+    }
+  </style>
+  <title>Binary Search</title>
+</head>
+
+<body>
+  <div class="quick-sort">
+  </div>
+</body>
+
+</html>

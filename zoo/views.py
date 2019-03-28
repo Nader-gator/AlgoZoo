@@ -11,3 +11,6 @@ def quick_sort(request):
 
 def merge_sort(request):
   return render(request, 'zoo/mergesort.html')
+
+def bsearch(request):
+  return render(request, 'zoo/bsearch.html')
