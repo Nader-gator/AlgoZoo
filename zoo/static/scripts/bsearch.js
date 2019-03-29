@@ -10,7 +10,7 @@ function runD3() {
     .append('g')
     .attr('transform', `translate(100,400)`)
 
-  var n = 25,
+  var n = 40,
     target = Math.floor(Math.random() * (n-1)),
     array = (d3.range(n)),
     moves = bsearch(array.slice(),target),
@@ -27,7 +27,7 @@ function runD3() {
     .range([0, 600]),
     rainbow = d3.scaleLinear()
     .domain([0, n / 2, n - 1])
-    .range(['blue', 'purple', 'orange']),
+    .range(['blue', 'green']),
     heightScale = d3.scaleLinear()
     .domain([0, n - 1])
     .range([50, 250])
