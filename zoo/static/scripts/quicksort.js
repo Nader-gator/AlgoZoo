@@ -12,7 +12,7 @@ function runD3() {
 
   var n = 25,
     array = d3.shuffle(d3.range(n)),
-    moves = quickSort(array.slice()).reverse(),
+    moves = quickSort(array.slice()),
     height = 500,
     width = 800,
     xScale = d3.scaleLinear()
@@ -20,10 +20,14 @@ function runD3() {
     .range([0, 600]),
     rainbow = d3.scaleLinear()
     .domain([0, n / 2, n - 1])
-    .range(['blue', 'purple', 'orange']),
+    .range(['blue', 'purple']),
     heightScale = d3.scaleLinear()
     .domain([0, n - 1])
     .range([50, 250])
+    array = array.map((el,i)=>{return {
+      value: el,
+      index: i
+    }})
 
   var lines = canvas.append("g")
     .attr("class", "line")
@@ -35,22 +39,23 @@ function runD3() {
     .attr('stroke', color)
 
   function transform(d, i) {
-    return `translate(${xScale(i)})`
+    return `translate(${xScale(d.index)})`
   }
 
   function color(d) {
-    return rainbow(d)
+    return rainbow(d.value)
   }
 
   function heightT(d) {
-    return heightScale(d) * -1
+    return heightScale(d.value) * -1
   }
 
-  var transition = d3.transition().delay(200)
-    .duration(450)
+  var transition = d3.transition()
+    .delay(100)
+    .duration(1200)
     .on("start", function start() {
-      var move = moves.pop()
-      if (move.type === "swap"){
+      var move = moves.shift()
+      if (move.type === "snap"){
         swapBars(move)
       }else if (move.type === "split"){
         grayOut(move)
@@ -64,24 +69,30 @@ function runD3() {
     })
 
   function swapBars(move){
-    var i = move.first,
-      j = move.second,
-      lineI = lines._groups[0][i],
-      lineJ = lines._groups[0][j];
-    lines._groups[0][i] = lineJ
-    lines._groups[0][j] = lineI
+    let completedArray = move.leftArr.concat(move.middle).concat(move.rightArr)
+    for (let i = 0; i < completedArray.length; i++) {
 
-    transition.each(function () {
-      lines.transition().attr('transform', transform)
-    })
+      for (let j = 0; j < array.length; j++) {
+        if (array[j].value === completedArray[i]){
+          if (array[j].index != i + move.left) {
+            array[j].index = i + move.left
+            transition.each(function () {
+            lines.transition().duration(900).attr('transform', transform)
+          })
+          }
+        }
+      }
+    }
   }
 
   function grayOut(move){
     lines.attr('class',function(d,i){
-      if (i < move.left || move.right < i){
+      if (d.index < move.left || move.right <= d.index){
         return 'greyed'
-      } else if (i === move.pivotPoint){
+      } else if (d.index === move.pivotPoint){
         return "pivot"
+      } else{
+        return null
       }
     })
   }
@@ -91,55 +102,55 @@ function runD3() {
   }
 
 function quickSort(array){
-  moves = []
+  var moves = []
 
-  function swap(i, j) {
-    if (i === j) return;
-    var temp = array[i]
-    array[i] = array[j]
-    array[j] = temp
+  function processSlice(left,right){
+    if (!(left < right - 1)){return}
+    var pivotPoint = Math.floor((left + right) / 2),
+    pivot = array[pivotPoint],
+    leftArr = array.slice(left,right).filter((el)=>el<pivot),
+    rightArr = array.slice(left,right).filter((el)=>el>pivot),
+    fullArr = leftArr.concat(pivot).concat(rightArr);
+    moves.push({
+      type: "split",
+      left: left ,
+      pivotPoint: pivotPoint,
+      right: right
+          })
 
-    moves.push({type: "swap", first: i, second: j});
-  }
-
-  function processSlice(left,pivotPoint,right){
-    var pivot = array[pivotPoint]
-    swap(pivotPoint,--right)
+    moves.push({
+      type: 'snap',
+      leftArr: leftArr,
+      rightArr: rightArr,
+      left: left,
+      right: right,
+      middle: [pivot],
+      pivotPoint: pivotPoint
+    })
     for (let i = left; i < right; i++) {
-      if (array[i] <= pivot){
-        swap(i,left++)
+      array[i] = fullArr[i - left]
+    }
+    processSlice(left, array.indexOf(pivot))
+    processSlice(array.indexOf(pivot), right)
+  }
+  processSlice(0,array.length)
+  return moves
+  }
+  function binarySearch(array,target){
+    if (array.length < 1){return false}
+    let pivotPoint = Math.floor(array.length/2),
+        pivot= array[pivotPoint]
+  
+      if (target === pivot){
+        return pivotPoint
       }
-    }
-    swap(left,right)
-    return left
+  
+      if (target < pivot){
+        return binarySearch(array.slice(0,pivotPoint),target)
+      } else if (target > pivot) {
+        let searchResult = binarySearch(array.slice(pivotPoint + 1), target)
+        return searchResult === false ? false : searchResult + pivotPoint + 1
+      }
   }
-
-  function removeDups(moves){
-    for (let i = 0; i < moves.length - 1; i++) {
-      if (moves[i].type === 'split' || moves[i+1].type === 'split') {continue}
-      if (moves[i].first === moves[i+1].first &&
-          moves[i].second === moves[i + 1].second
-        ){ moves.splice(i,2)}
-    }
-    return moves
-  }
-
-  function split(left,right){
-    if (left < right - 1){
-      var pivotPoint = Math.floor((left+right)/2)
-      moves.push({
-        type: "split",
-        left: left,
-        pivotPoint: pivotPoint,
-        right: right,
-      })
-      newPivot = processSlice(left,pivotPoint,right)
-      split(left,newPivot)
-      split(newPivot+1,right)
-    }
-  }
-
-  split(0,array.length)
-  return removeDups(moves)
-}
+  debugger
 }

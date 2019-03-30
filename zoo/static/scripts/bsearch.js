@@ -66,11 +66,9 @@ function runD3() {
     .duration(1000)
     .on("start", function start() {
       var move = moves.shift()
-      // debugger
       switch (move.type) {
         case 'split':
           for (let i = 0; i < data.length; i++) {
-            // debugger
             if (i >= move.left && i < move.right){
               data[i].type = 'grayed'
             }
@@ -80,9 +78,7 @@ function runD3() {
           data[move.index].type = 'highlight'
           break;
       }
-      debugger
       transition.each(function(){
-        debugger
         lines.transition().attr('class',function(d,i){
           return d.type})
       })
