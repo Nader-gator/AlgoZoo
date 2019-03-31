@@ -55,7 +55,7 @@ function runD3() {
     .duration(1200)
     .on("start", function start() {
       var move = moves.shift()
-      if (move.type === "snap"){
+      if (move.type === "swap"){
         swapBars(move)
       }else if (move.type === "split"){
         grayOut(move)
@@ -67,11 +67,9 @@ function runD3() {
         colorizeAll()
       }
     })
-
   function swapBars(move){
     let completedArray = move.leftArr.concat(move.middle).concat(move.rightArr)
     for (let i = 0; i < completedArray.length; i++) {
-
       for (let j = 0; j < array.length; j++) {
         if (array[j].value === completedArray[i]){
           if (array[j].index != i + move.left) {
@@ -119,7 +117,7 @@ function quickSort(array){
           })
 
     moves.push({
-      type: 'snap',
+      type: 'swap',
       leftArr: leftArr,
       rightArr: rightArr,
       left: left,
@@ -136,21 +134,4 @@ function quickSort(array){
   processSlice(0,array.length)
   return moves
   }
-  function binarySearch(array,target){
-    if (array.length < 1){return false}
-    let pivotPoint = Math.floor(array.length/2),
-        pivot= array[pivotPoint]
-  
-      if (target === pivot){
-        return pivotPoint
-      }
-  
-      if (target < pivot){
-        return binarySearch(array.slice(0,pivotPoint),target)
-      } else if (target > pivot) {
-        let searchResult = binarySearch(array.slice(pivotPoint + 1), target)
-        return searchResult === false ? false : searchResult + pivotPoint + 1
-      }
-  }
-  debugger
 }
