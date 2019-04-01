@@ -52,7 +52,7 @@ function runD3() {
 
   var transition = d3.transition()
     .delay(100)
-    .duration(1200)
+    .duration(950)
     .on("start", function start() {
       var move = moves.shift()
       if (move.type === "swap"){
@@ -75,7 +75,7 @@ function runD3() {
           if (array[j].index != i + move.left) {
             array[j].index = i + move.left
             transition.each(function () {
-            lines.transition().duration(900).attr('transform', transform)
+            lines.transition().duration(800).attr('transform', transform)
           })
           }
         }

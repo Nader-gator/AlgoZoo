@@ -27,7 +27,7 @@ function runD3() {
     .range([0, 600]),
     rainbow = d3.scaleLinear()
     .domain([0, n / 2, n - 1])
-    .range(['blue', 'green']),
+    .range(['#3399ff','black', '#ff00ff']),
     heightScale = d3.scaleLinear()
     .domain([0, n - 1])
     .range([50, 250])
@@ -77,6 +77,9 @@ function runD3() {
         case 'check':
           data[move.index].type = 'highlight'
           break;
+      }
+      if (!moves.length) {
+        data[move.index].type = 'found'
       }
       transition.each(function(){
         lines.transition().attr('class',function(d,i){
