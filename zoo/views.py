@@ -14,3 +14,6 @@ def merge_sort(request):
 
 def bsearch(request):
   return render(request, 'zoo/bsearch.html')
+
+def binarytree(request):
+  return render(request,'zoo/binarytree.html')
