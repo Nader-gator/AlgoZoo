@@ -1,47 +1,49 @@
-document.addEventListener("DOMContentLoaded", runD3)
+document.addEventListener("DOMContentLoaded", runD3);
 
 function runD3() {
   var width = 1000,
     height = 600;
-  function generateBoxes(n){
-    let result = 0
-    while(n > 1){
-      result += n
-      n /= 2
+  function generateBoxes(n) {
+    let result = 0;
+    while (n > 1) {
+      result += n;
+      n /= 2;
     }
-    return result + 1
+    return result + 1;
   }
-  function layer(boxes){
+  function layer(boxes) {
     let result = [],
-        layer = 0,
-        capacity = 1,
-        runningcap = 1,
-        overallIndex = 0;
+      layer = 0,
+      capacity = 1,
+      runningcap = 1,
+      overallIndex = 0;
 
-    boxes.forEach(el=> {
+    boxes.forEach(el => {
       result.push({
         layer: layer,
         id: el,
         layerIndex: capacity - runningcap,
         occupied: false,
-        size: n/capacity,
-        overallIndex: d3.range(overallIndex, overallIndex+ n/capacity)
-      })
-      runningcap -= 1
-      overallIndex += n/capacity
-      if (runningcap === 0){
-        layer += 1
-        capacity *= 2
-        runningcap = capacity
+        size: n / capacity,
+        overallIndex: d3.range(overallIndex, overallIndex + n / capacity)
+      });
+      runningcap -= 1;
+      overallIndex += n / capacity;
+      if (runningcap === 0) {
+        layer += 1;
+        capacity *= 2;
+        runningcap = capacity;
       }
-    })
-    return result
+    });
+    return result;
   }
-  var svg = d3.select(".merge-sort").append("svg")
-    .attr('width', width)
+  var svg = d3
+    .select(".merge-sort")
+    .append("svg")
+    .attr("width", width)
     .attr("height", height)
-    .append('g')
-    .attr('transform', `translate(100,100)`)
+    .append("g")
+    .attr("transform", `translate(100,100)`);
 
   var n = 8,
     // nums = [3,1,2,4]
@@ -51,231 +53,266 @@ function runD3() {
         layer: 0,
         value: el,
         index: i
-      }
+      };
     }),
     boxes = layer(d3.range(generateBoxes(n))),
     moves = mergeSort(data.slice()),
-    xScale = d3.scaleLinear()
-    .domain([0, n - 1])
-    .range([0, 700]),
-    boxXScale = d3.scaleOrdinal()
-    .domain(d3.range(n))
-    .range(d3.range(n).map(el=>el*100)),
-    boxSizeScale = d3.scaleOrdinal()
-    .domain(d3.range(n/2))
-    .range([800,400,200,100])
-    yScale = d3.scaleLinear()
-    .domain([0, n/2 -1])
-    .range([0, 400]),
-    rainbow = d3.scaleLinear()
-    .domain([0, n / 2, n - 1])
-    .range(['red', 'blue']),
-    heightScale = d3.scaleLinear()
-    .domain([0, n - 1])
-    .range([10, 70 ]);
-    data = data.map((el)=>{el.layer=0;return el}),
-    lines = svg.append("g")
-    .selectAll('rect')
-    .data(data)
-    .enter()
-    .append('rect')
-    .attr('width', heightT)
-    .attr('height', heightT)
-    .attr('transform', transform)
-    .attr('stroke', color)
-    .attr('fill', color),
-    borderBoxes = svg.append("g")
-    .selectAll('rect')
-    .data(boxes)
-    .enter().append('rect')
-    .attr('width', boxWidth)
-    .attr('height', 80)
-    .attr('transform', boxTransform)
-    .attr('stroke', 'red')
-    .attr('fill', 'none')
-    .attr('display',displayCheck)
-
+    xScale = d3
+      .scaleLinear()
+      .domain([0, n - 1])
+      .range([0, 700]),
+    boxXScale = d3
+      .scaleOrdinal()
+      .domain(d3.range(n))
+      .range(d3.range(n).map(el => el * 100)),
+    boxSizeScale = d3
+      .scaleOrdinal()
+      .domain(d3.range(n / 2))
+      .range([800, 400, 200, 100]);
+  (yScale = d3
+    .scaleLinear()
+    .domain([0, n / 2 - 1])
+    .range([0, 400])),
+    (rainbow = d3
+      .scaleLinear()
+      .domain([0, n / 2, n - 1])
+      .range(["red", "blue"])),
+    (heightScale = d3
+      .scaleLinear()
+      .domain([0, n - 1])
+      .range([10, 70]));
+  (data = data.map(el => {
+    el.layer = 0;
+    return el;
+  })),
+    (lines = svg
+      .append("g")
+      .selectAll("rect")
+      .data(data)
+      .enter()
+      .append("rect")
+      .attr("width", heightT)
+      .attr("height", heightT)
+      .attr("transform", transform)
+      .attr("stroke", color)
+      .attr("fill", color)),
+    (borderBoxes = svg
+      .append("g")
+      .selectAll("rect")
+      .data(boxes)
+      .enter()
+      .append("rect")
+      .attr("width", boxWidth)
+      .attr("height", 80)
+      .attr("transform", boxTransform)
+      .attr("stroke", "red")
+      .attr("fill", "none")
+      .attr("display", displayCheck));
 
   function transform(d, i) {
-    return `translate(${xScale(d.index) + (100/2) - (heightScale(d.value)/2) },${yScale(d.layer) + (70/2) - (heightScale(d.value)/2)})`
+    return `translate(${xScale(d.index) +
+      100 / 2 -
+      heightScale(d.value) / 2},${yScale(d.layer) +
+      70 / 2 -
+      heightScale(d.value) / 2})`;
   }
 
-  function displayCheck(d,i){
-    if (d.occupied){
-      return 'initial'
-    }else{
-      return 'none'
+  function displayCheck(d, i) {
+    if (d.occupied) {
+      return "initial";
+    } else {
+      return "none";
     }
   }
 
-  function boxWidth(d,i){
-    return boxSizeScale(d.layer)
+  function boxWidth(d, i) {
+    return boxSizeScale(d.layer);
   }
 
-  function boxTransform(d,i){
-    return `translate(${boxXScale(d.layerIndex * (2**((n/2)-(d.layer + 1)))) },${yScale(d.layer) - 5})`
+  function boxTransform(d, i) {
+    return `translate(${boxXScale(
+      d.layerIndex * 2 ** (n / 2 - (d.layer + 1))
+    )},${yScale(d.layer) - 5})`;
   }
 
   function color(d) {
-    return rainbow(d.value)
+    return rainbow(d.value);
   }
 
   function heightT(d) {
-    return heightScale(d.value)
+    return heightScale(d.value);
   }
-  moves = moves.filter((el)=> el.type === "split").concat(moves.filter((el)=> el.type === "swap"))
-  var transition = d3.transition()
+  moves = moves
+    .filter(el => el.type === "split")
+    .concat(moves.filter(el => el.type === "swap"));
+  var transition = d3
+    .transition()
     .duration(550)
-    .on("start", start = () => {
-      checkBoxes()
-      var move = moves.shift()
-      if (move.type === "swap") {
-        makeSwap(move)
-      } else if (move.type === "split") {
-        makeSplit(move)
-      }
-      checkBoxes()
-      if (moves.length) {
-        transition = transition.transition().on('start', start)
-      } else {
-        data.map((el)=>{el.layer = 0;return el})
-        transition.each(function () {
-          lines.transition()
-          .duration(500)
-          .attr('transform', transform)
-        })
-      }
-    })
-    // && dataEl.index >= el.layerIndex * el.size && dataEl.index <= (el.layerIndex + el.size)
-
-    function checkCollision(box){
-      for (let i = 0; i < data.length; i++) {
-        const element = data[i];
-        const overallIndex = (element.layer * n) + element.index
-
-        if (box.overallIndex.includes(overallIndex)){
-          return true
+    .on(
+      "start",
+      (start = () => {
+        checkBoxes();
+        var move = moves.shift();
+        if (move.type === "swap") {
+          makeSwap(move);
+        } else if (move.type === "split") {
+          makeSplit(move);
         }
-      }
+        checkBoxes();
+        if (moves.length) {
+          transition = transition.transition().on("start", start);
+        } else {
+          data.map(el => {
+            el.layer = 0;
+            return el;
+          });
+          transition.each(function() {
+            lines
+              .transition()
+              .duration(500)
+              .attr("transform", transform);
+          });
+        }
+      })
+    );
+  // && dataEl.index >= el.layerIndex * el.size && dataEl.index <= (el.layerIndex + el.size)
 
-      return false
+  function checkCollision(box) {
+    for (let i = 0; i < data.length; i++) {
+      const element = data[i];
+      const overallIndex = element.layer * n + element.index;
+
+      if (box.overallIndex.includes(overallIndex)) {
+        return true;
+      }
     }
 
-    function checkBoxes(){
+    return false;
+  }
 
-      for (let i = 0; i < boxes.length; i++) {
-        const box = boxes[i];
-        if(checkCollision(box) === true){
-          box.occupied = true
-        } else if(checkCollision(box) === false) {
-          box.occupied = false
-        }
+  function checkBoxes() {
+    for (let i = 0; i < boxes.length; i++) {
+      const box = boxes[i];
+      if (checkCollision(box) === true) {
+        box.occupied = true;
+      } else if (checkCollision(box) === false) {
+        box.occupied = false;
       }
-
-    transition.each(function () {
-      borderBoxes.transition()
-        .attr('display',displayCheck)
-    })
     }
-  function makeSplit(move){
-    data.forEach((element,i) => {
-      if (i >= move.startPoint && i < move.endPoint){
-        element.layer += 1
+
+    transition.each(function() {
+      borderBoxes.transition().attr("display", displayCheck);
+    });
+  }
+  function makeSplit(move) {
+    data.forEach((element, i) => {
+      if (i >= move.startPoint && i < move.endPoint) {
+        element.layer += 1;
       }
     });
-    transition.each(function () {
-      lines.transition()
-      .duration(500)
-      .attr('transform', transform)
-    })
+    transition.each(function() {
+      lines
+        .transition()
+        .duration(500)
+        .attr("transform", transform);
+    });
   }
 
-  function makeSwap(move){
-
-    data[move.j].index = move.snapShot.snapShot[move.i-move.snapShot.start].index + move.snapShot.start
-    data[move.j].layer -= 1
-    transition.each(function () {
-      lines.transition()
-      .duration(500)
-      .attr('transform', transform)
-    })
+  function makeSwap(move) {
+    data[move.j].index =
+      move.snapShot.snapShot[move.i - move.snapShot.start].index +
+      move.snapShot.start;
+    data[move.j].layer -= 1;
+    transition.each(function() {
+      lines
+        .transition()
+        .duration(500)
+        .attr("transform", transform);
+    });
   }
-  
 
- function mergeSort(array){
-
-  var moves = []
-    function merge(left,right,start,end) {
-
-      let result = left.concat(right).sort((a,b)=>{return a.value-b.value})
-      let fixedIndexes = []
+  function mergeSort(array) {
+    var moves = [];
+    function merge(left, right, start, end) {
+      let result = left.concat(right).sort((a, b) => {
+        return a.value - b.value;
+      });
+      let fixedIndexes = [];
       for (let i = 0; i < result.length; i++) {
         fixedIndexes.push({
           layer: result[i].layer,
           value: result[i].value,
-          index: i,
-        })
+          index: i
+        });
       }
       moves.push({
         type: "swap",
         start: start,
         end: end,
         snapShot: fixedIndexes
-      })
+      });
 
-      return result
+      return result;
     }
-    function deConstruct(moves){
-      var result = []
+    function deConstruct(moves) {
+      var result = [];
       let testdata = nums.map((el, i) => {
-          return {
-            layer: 0,
-            value: el,
-            index: i
-          }
-        })
+        return {
+          layer: 0,
+          value: el,
+          index: i
+        };
+      });
       moves.forEach(move => {
-        if (move.type === 'swap'){
+        if (move.type === "swap") {
           for (let i = move.start; i < move.end; i++) {
             for (let j = move.start; j < move.end; j++) {
               if (move.snapShot[i - move.start].value === testdata[j].value) {
-                testdata[j].index = move.snapShot[i - move.start].index + move.start
+                testdata[j].index =
+                  move.snapShot[i - move.start].index + move.start;
                 // if(i != j){
-                  result.push({
-                    type: 'swap',
-                    j: j,
-                    i: i,
-                    snapShot: move
-                  })
+                result.push({
+                  type: "swap",
+                  j: j,
+                  i: i,
+                  snapShot: move
+                });
                 // }
               }
             }
           }
-        }else {result.push(move)}
-        });
-      return result
+        } else {
+          result.push(move);
+        }
+      });
+      return result;
     }
-    function split(array ,layer = 0,reference = 0,endpoint = array.length){
-
-      array.map((el)=>{el.layer = layer;return el})
+    function split(array, layer = 0, reference = 0, endpoint = array.length) {
+      array.map(el => {
+        el.layer = layer;
+        return el;
+      });
       if (array.length < 2) return array;
       let middlePoint = array.length >> 1,
-      left = array.slice(0,middlePoint),
-      right = array.slice(middlePoint);
+        left = array.slice(0, middlePoint),
+        right = array.slice(middlePoint);
       moves.push({
         type: "split",
-        middlePoint: middlePoint+reference,
+        middlePoint: middlePoint + reference,
         startPoint: reference,
-        endPoint: endpoint+reference,
+        endPoint: endpoint + reference,
         layer: layer
-      })
+      });
 
-
-      return merge(split(left,layer+1,reference),split(right,layer+1,reference+middlePoint),reference,endpoint+reference)
+      return merge(
+        split(left, layer + 1, reference),
+        split(right, layer + 1, reference + middlePoint),
+        reference,
+        endpoint + reference
+      );
     }
 
-   split(array)
-   return deConstruct(moves)
+    split(array);
+    return deConstruct(moves);
   }
-
 }
