@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", runD3);
 
 function runD3() {
+  var d3 = window.d3
   var width = 1000,
     height = 600;
   function generateBoxes(n) {
@@ -68,35 +69,35 @@ function runD3() {
     boxSizeScale = d3
       .scaleOrdinal()
       .domain(d3.range(n / 2))
-      .range([800, 400, 200, 100]);
-  (yScale = d3
-    .scaleLinear()
-    .domain([0, n / 2 - 1])
-    .range([0, 400])),
-    (rainbow = d3
+      .range([800, 400, 200, 100]),
+    yScale = d3
+      .scaleLinear()
+      .domain([0, n / 2 - 1])
+      .range([0, 400]),
+    rainbow = d3
       .scaleLinear()
       .domain([0, n / 2, n - 1])
-      .range(["red", "blue"])),
-    (heightScale = d3
+      .range(["red", "blue"]),
+    heightScale = d3
       .scaleLinear()
       .domain([0, n - 1])
-      .range([10, 70]));
-  (data = data.map(el => {
-    el.layer = 0;
-    return el;
-  })),
-    (lines = svg
+      .range([10, 70]),
+    mappedData = data.map(el => {
+      el.layer = 0;
+      return el;
+    }),
+    lines = svg
       .append("g")
       .selectAll("rect")
-      .data(data)
+      .data(mappedData)
       .enter()
       .append("rect")
       .attr("width", heightT)
       .attr("height", heightT)
       .attr("transform", transform)
       .attr("stroke", color)
-      .attr("fill", color)),
-    (borderBoxes = svg
+      .attr("fill", color),
+    borderBoxes = svg
       .append("g")
       .selectAll("rect")
       .data(boxes)
@@ -107,9 +108,9 @@ function runD3() {
       .attr("transform", boxTransform)
       .attr("stroke", "red")
       .attr("fill", "none")
-      .attr("display", displayCheck));
+      .attr("display", displayCheck);
 
-  function transform(d, i) {
+  function transform(d) {
     return `translate(${xScale(d.index) +
       100 / 2 -
       heightScale(d.value) / 2},${yScale(d.layer) +
@@ -117,7 +118,7 @@ function runD3() {
       heightScale(d.value) / 2})`;
   }
 
-  function displayCheck(d, i) {
+  function displayCheck(d) {
     if (d.occupied) {
       return "initial";
     } else {
@@ -125,11 +126,11 @@ function runD3() {
     }
   }
 
-  function boxWidth(d, i) {
+  function boxWidth(d) {
     return boxSizeScale(d.layer);
   }
 
-  function boxTransform(d, i) {
+  function boxTransform(d) {
     return `translate(${boxXScale(
       d.layerIndex * 2 ** (n / 2 - (d.layer + 1))
     )},${yScale(d.layer) - 5})`;
@@ -150,7 +151,7 @@ function runD3() {
     .duration(550)
     .on(
       "start",
-      (start = () => {
+      function start() {
         checkBoxes();
         var move = moves.shift();
         if (move.type === "swap") {
@@ -162,7 +163,7 @@ function runD3() {
         if (moves.length) {
           transition = transition.transition().on("start", start);
         } else {
-          data.map(el => {
+          mappedData.map(el => {
             el.layer = 0;
             return el;
           });
@@ -173,13 +174,13 @@ function runD3() {
               .attr("transform", transform);
           });
         }
-      })
+      }
     );
   // && dataEl.index >= el.layerIndex * el.size && dataEl.index <= (el.layerIndex + el.size)
 
   function checkCollision(box) {
-    for (let i = 0; i < data.length; i++) {
-      const element = data[i];
+    for (let i = 0; i < mappedData.length; i++) {
+      const element = mappedData[i];
       const overallIndex = element.layer * n + element.index;
 
       if (box.overallIndex.includes(overallIndex)) {
@@ -205,7 +206,7 @@ function runD3() {
     });
   }
   function makeSplit(move) {
-    data.forEach((element, i) => {
+    mappedData.forEach((element, i) => {
       if (i >= move.startPoint && i < move.endPoint) {
         element.layer += 1;
       }
@@ -219,10 +220,10 @@ function runD3() {
   }
 
   function makeSwap(move) {
-    data[move.j].index =
+    mappedData[move.j].index =
       move.snapShot.snapShot[move.i - move.snapShot.start].index +
       move.snapShot.start;
-    data[move.j].layer -= 1;
+    mappedData[move.j].layer -= 1;
     transition.each(function() {
       lines
         .transition()
