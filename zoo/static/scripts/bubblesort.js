@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", runD3);
 function runD3() {
-  var width = 800,
-    height = 500;
-
+  var d3 = window.d3
+    var width = 800,
+      height = 500;
   var canvas = d3
     .select(".bubble-sort")
     .append("svg")
@@ -14,8 +14,6 @@ function runD3() {
   var n = 15,
     array = d3.shuffle(d3.range(n)),
     moves = bubbleSort(array.slice()),
-    height = 500,
-    width = 800,
     xScale = d3
       .scaleLinear()
       .domain([0, n - 1])
@@ -59,9 +57,6 @@ function runD3() {
   function heightT(d) {
     return heightScale(d) * -1;
   }
-  function underlineT(swap) {
-    return `translate(${swap[0]},${swap[1]})`;
-  }
 
   var transition = d3
     .transition()
@@ -70,11 +65,11 @@ function runD3() {
     .on("start", function start() {
       var move = moves.shift();
       if (move.type === "swap") {
-        var swap = move.move;
-        (i = swap[0]),
-          (j = swap[1]),
-          (lineI = lines._groups[0][i]),
-          (lineJ = lines._groups[0][j]);
+        var swap = move.move,
+        i = swap[0],
+          j = swap[1],
+          lineI = lines._groups[0][i],
+          lineJ = lines._groups[0][j];
 
         lines._groups[0][i] = lineJ;
         lines._groups[0][j] = lineI;
@@ -120,7 +115,6 @@ function runD3() {
             move: [i, i + 1]
           });
           swapped = true;
-        } else {
         }
       }
     }

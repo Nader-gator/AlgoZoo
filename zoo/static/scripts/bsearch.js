@@ -1,8 +1,9 @@
 document.addEventListener("DOMContentLoaded", runD3);
 
 function runD3() {
-  var width = 800,
-    height = 500;
+    var d3 = window.d3,
+    height = 500,
+    width = 800;
 
   var canvas = d3
     .select(".quick-sort")
@@ -22,8 +23,6 @@ function runD3() {
         type: "line"
       };
     }),
-    height = 500,
-    width = 800,
     xScale = d3
       .scaleLinear()
       .domain([0, n - 1])
@@ -64,7 +63,7 @@ function runD3() {
     setTimeout(() => {
       // lines._groups[0][move.location].setAttribute('class','target')
       data[move.location].type = "target";
-      lines.transition().attr("class", function(d, i) {
+      lines.transition().attr("class", function(d) {
         return d.type;
       });
     }, 500);
@@ -91,7 +90,7 @@ function runD3() {
         data[move.index].type = "found";
       }
       transition.each(function() {
-        lines.transition().attr("class", function(d, i) {
+        lines.transition().attr("class", function(d) {
           return d.type;
         });
       });
@@ -108,7 +107,7 @@ function runD3() {
         return false;
       }
       let midPoint = array.length >> 1;
-      mid = array[midPoint];
+      var mid = array[midPoint];
       moves.push({
         type: "check",
         index: reference + midPoint
@@ -138,7 +137,7 @@ function runD3() {
         return search === false ? false : search + midPoint + 1;
       }
     }
-    result = recurse(array, target);
+    var result = recurse(array, target);
     moves.unshift({ type: "highlight", location: result });
     return moves;
   }

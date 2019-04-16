@@ -1,9 +1,9 @@
 document.addEventListener("DOMContentLoaded", runD3);
 
 function runD3() {
-  var width = 800,
-    height = 500;
-
+  var d3 = window.d3,
+    height = 500,
+    width = 800
   var canvas = d3
     .select(".quick-sort")
     .append("svg")
@@ -15,8 +15,6 @@ function runD3() {
   var n = 25,
     array = d3.shuffle(d3.range(n)),
     moves = quickSort(array.slice()),
-    height = 500,
-    width = 800,
     xScale = d3
       .scaleLinear()
       .domain([0, n - 1])
@@ -47,7 +45,7 @@ function runD3() {
     .attr("transform", transform)
     .attr("stroke", color);
 
-  function transform(d, i) {
+  function transform(d) {
     return `translate(${xScale(d.index)})`;
   }
 
@@ -97,7 +95,7 @@ function runD3() {
   }
 
   function grayOut(move) {
-    lines.attr("class", function(d, i) {
+    lines.attr("class", function(d) {
       if (d.index < move.left || move.right <= d.index) {
         return "greyed";
       } else if (d.index === move.pivotPoint) {
