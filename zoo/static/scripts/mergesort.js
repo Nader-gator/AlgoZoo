@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", runD3);
 
 function runD3() {
-  var d3 = window.d3
+  var d3 = window.d3;
   var width = 1000,
     height = 600;
   function generateBoxes(n) {
@@ -149,33 +149,30 @@ function runD3() {
   var transition = d3
     .transition()
     .duration(550)
-    .on(
-      "start",
-      function start() {
-        checkBoxes();
-        var move = moves.shift();
-        if (move.type === "swap") {
-          makeSwap(move);
-        } else if (move.type === "split") {
-          makeSplit(move);
-        }
-        checkBoxes();
-        if (moves.length) {
-          transition = transition.transition().on("start", start);
-        } else {
-          mappedData.map(el => {
-            el.layer = 0;
-            return el;
-          });
-          transition.each(function() {
-            lines
-              .transition()
-              .duration(500)
-              .attr("transform", transform);
-          });
-        }
+    .on("start", function start() {
+      checkBoxes();
+      var move = moves.shift();
+      if (move.type === "swap") {
+        makeSwap(move);
+      } else if (move.type === "split") {
+        makeSplit(move);
       }
-    );
+      checkBoxes();
+      if (moves.length) {
+        transition = transition.transition().on("start", start);
+      } else {
+        mappedData.map(el => {
+          el.layer = 0;
+          return el;
+        });
+        transition.each(function() {
+          lines
+            .transition()
+            .duration(500)
+            .attr("transform", transform);
+        });
+      }
+    });
   // && dataEl.index >= el.layerIndex * el.size && dataEl.index <= (el.layerIndex + el.size)
 
   function checkCollision(box) {

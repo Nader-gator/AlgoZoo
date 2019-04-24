@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", runD3);
 function runD3() {
-  var d3 = window.d3
-    var width = 800,
-      height = 500;
+  var d3 = window.d3;
+  var width = 800,
+    height = 500;
   var canvas = d3
     .select(".bubble-sort")
     .append("svg")
@@ -66,7 +66,7 @@ function runD3() {
       var move = moves.shift();
       if (move.type === "swap") {
         var swap = move.move,
-        i = swap[0],
+          i = swap[0],
           j = swap[1],
           lineI = lines._groups[0][i],
           lineJ = lines._groups[0][j];

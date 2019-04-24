@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", runD3);
 function runD3() {
   var d3 = window.d3,
     height = 500,
-    width = 800
+    width = 800;
   var canvas = d3
     .select(".quick-sort")
     .append("svg")
