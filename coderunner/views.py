@@ -40,5 +40,5 @@ def result(request, code_id):
     test_function = test_module.test_results
 
     results = test_function(answer_function)
-
-    return render(request, 'coderunner/result.html')
+    context = {'results': results}
+    return render(request, 'coderunner/result.html', context)

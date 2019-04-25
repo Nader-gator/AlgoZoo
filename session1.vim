@@ -13,8 +13,8 @@ badd +1 zoo/tests.py
 badd +1 zoo/urls.py
 badd +5 urls.py
 badd +1 coderunner/templates/coderunner/home.html
-badd +28 coderunner/views.py
-badd +6 coderunner/urls.py
+badd +7 coderunner/views.py
+badd +7 coderunner/urls.py
 badd +5 AlgoZoo/views.py
 badd +1 AlgoZoo/templates/root.html
 badd +5 AlgoZoo/wsgi.py
@@ -37,12 +37,14 @@ badd +0 term://.//86154:/bin/zsh
 badd +5 coderunner/models.py
 badd +1 requirements.txt
 badd +1 coderunner/static/problems/binarysearch.py
-badd +0 coderunner/templates/coderunner/result.html
-badd +0 static/tests/binarysearch_tests.py
+badd +8 coderunner/templates/coderunner/result.html
+badd +1 static/tests/binarysearch_tests.py
 badd +0 static/problems/binarysearch.py
+badd +1 coderunner/static/tests/binarysearch_tests.py
+badd +22 coderunner/static/tests/binarysearch_test.py
 argglobal
 silent! argdel *
-edit coderunner/views.py
+edit coderunner/templates/coderunner/result.html
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -61,6 +63,10 @@ wincmd _ | wincmd |
 vsplit
 1wincmd h
 wincmd w
+wincmd w
+wincmd _ | wincmd |
+vsplit
+1wincmd h
 wincmd w
 wincmd w
 wincmd _ | wincmd |
@@ -88,27 +94,29 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 31 + 181) / 362)
-exe '2resize ' . ((&lines * 27 + 33) / 67)
-exe 'vert 2resize ' . ((&columns * 82 + 181) / 362)
-exe '3resize ' . ((&lines * 27 + 33) / 67)
-exe 'vert 3resize ' . ((&columns * 81 + 181) / 362)
-exe '4resize ' . ((&lines * 20 + 33) / 67)
-exe 'vert 4resize ' . ((&columns * 164 + 181) / 362)
-exe '5resize ' . ((&lines * 27 + 33) / 67)
-exe 'vert 5resize ' . ((&columns * 82 + 181) / 362)
-exe '6resize ' . ((&lines * 27 + 33) / 67)
-exe 'vert 6resize ' . ((&columns * 82 + 181) / 362)
-exe '7resize ' . ((&lines * 20 + 33) / 67)
-exe 'vert 7resize ' . ((&columns * 82 + 181) / 362)
-exe '8resize ' . ((&lines * 20 + 33) / 67)
-exe 'vert 8resize ' . ((&columns * 82 + 181) / 362)
-exe '9resize ' . ((&lines * 15 + 33) / 67)
-exe 'vert 9resize ' . ((&columns * 109 + 181) / 362)
-exe '10resize ' . ((&lines * 15 + 33) / 67)
-exe 'vert 10resize ' . ((&columns * 110 + 181) / 362)
-exe '11resize ' . ((&lines * 15 + 33) / 67)
-exe 'vert 11resize ' . ((&columns * 109 + 181) / 362)
+exe 'vert 1resize ' . ((&columns * 40 + 181) / 362)
+exe '2resize ' . ((&lines * 25 + 33) / 67)
+exe 'vert 2resize ' . ((&columns * 58 + 181) / 362)
+exe '3resize ' . ((&lines * 25 + 33) / 67)
+exe 'vert 3resize ' . ((&columns * 100 + 181) / 362)
+exe '4resize ' . ((&lines * 17 + 33) / 67)
+exe 'vert 4resize ' . ((&columns * 79 + 181) / 362)
+exe '5resize ' . ((&lines * 17 + 33) / 67)
+exe 'vert 5resize ' . ((&columns * 79 + 181) / 362)
+exe '6resize ' . ((&lines * 9 + 33) / 67)
+exe 'vert 6resize ' . ((&columns * 80 + 181) / 362)
+exe '7resize ' . ((&lines * 9 + 33) / 67)
+exe 'vert 7resize ' . ((&columns * 80 + 181) / 362)
+exe '8resize ' . ((&lines * 33 + 33) / 67)
+exe 'vert 8resize ' . ((&columns * 80 + 181) / 362)
+exe '9resize ' . ((&lines * 33 + 33) / 67)
+exe 'vert 9resize ' . ((&columns * 80 + 181) / 362)
+exe '10resize ' . ((&lines * 20 + 33) / 67)
+exe 'vert 10resize ' . ((&columns * 106 + 181) / 362)
+exe '11resize ' . ((&lines * 20 + 33) / 67)
+exe 'vert 11resize ' . ((&columns * 107 + 181) / 362)
+exe '12resize ' . ((&lines * 20 + 33) / 67)
+exe 'vert 12resize ' . ((&columns * 106 + 181) / 362)
 argglobal
 enew
 file NERD_tree_1
@@ -131,15 +139,15 @@ setlocal fml=1
 setlocal fdn=20
 setlocal fen
 silent! normal! zE
-let s:l = 29 - ((24 * winheight(0) + 13) / 27)
+let s:l = 8 - ((5 * winheight(0) + 12) / 25)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-29
-normal! 05|
+8
+normal! 07|
 wincmd w
 argglobal
-if bufexists("coderunner/templates/coderunner/result.html") | buffer coderunner/templates/coderunner/result.html | else | edit coderunner/templates/coderunner/result.html | endif
+if bufexists("coderunner/views.py") | buffer coderunner/views.py | else | edit coderunner/views.py | endif
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -149,12 +157,12 @@ setlocal fml=1
 setlocal fdn=20
 setlocal fen
 silent! normal! zE
-let s:l = 10 - ((8 * winheight(0) + 13) / 27)
+let s:l = 22 - ((21 * winheight(0) + 12) / 25)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-10
-normal! 07|
+22
+normal! 0
 wincmd w
 argglobal
 if bufexists("coderunner/urls.py") | buffer coderunner/urls.py | else | edit coderunner/urls.py | endif
@@ -167,12 +175,30 @@ setlocal fml=1
 setlocal fdn=20
 setlocal fen
 silent! normal! zE
-let s:l = 7 - ((6 * winheight(0) + 10) / 20)
+let s:l = 7 - ((5 * winheight(0) + 8) / 17)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 7
-normal! 05|
+normal! 032|
+wincmd w
+argglobal
+if bufexists("coderunner/models.py") | buffer coderunner/models.py | else | edit coderunner/models.py | endif
+setlocal fdm=manual
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+silent! normal! zE
+let s:l = 1 - ((0 * winheight(0) + 8) / 17)
+if s:l < 1 | let s:l = 1 | endif
+exe s:l
+normal! zt
+1
+normal! 0
 wincmd w
 argglobal
 if bufexists("coderunner/templates/coderunner/test.html") | buffer coderunner/templates/coderunner/test.html | else | edit coderunner/templates/coderunner/test.html | endif
@@ -185,12 +211,12 @@ setlocal fml=1
 setlocal fdn=20
 setlocal fen
 silent! normal! zE
-let s:l = 36 - ((20 * winheight(0) + 13) / 27)
+let s:l = 17 - ((5 * winheight(0) + 4) / 9)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-36
-normal! 07|
+17
+normal! 047|
 wincmd w
 argglobal
 if bufexists("static/problems/binarysearch.py") | buffer static/problems/binarysearch.py | else | edit static/problems/binarysearch.py | endif
@@ -203,12 +229,12 @@ setlocal fml=1
 setlocal fdn=20
 setlocal fen
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 13) / 27)
+let s:l = 5 - ((1 * winheight(0) + 4) / 9)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
-normal! 0
+5
+normal! 010|
 wincmd w
 argglobal
 if bufexists("coderunner/templates/coderunner/home.html") | buffer coderunner/templates/coderunner/home.html | else | edit coderunner/templates/coderunner/home.html | endif
@@ -221,7 +247,7 @@ setlocal fml=1
 setlocal fdn=20
 setlocal fen
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 10) / 20)
+let s:l = 1 - ((0 * winheight(0) + 16) / 33)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -229,7 +255,7 @@ normal! zt
 normal! 0
 wincmd w
 argglobal
-if bufexists("static/tests/binarysearch_tests.py") | buffer static/tests/binarysearch_tests.py | else | edit static/tests/binarysearch_tests.py | endif
+if bufexists("coderunner/static/tests/binarysearch_test.py") | buffer coderunner/static/tests/binarysearch_test.py | else | edit coderunner/static/tests/binarysearch_test.py | endif
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -239,12 +265,12 @@ setlocal fml=1
 setlocal fdn=20
 setlocal fen
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 10) / 20)
+let s:l = 3 - ((2 * winheight(0) + 16) / 33)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
-normal! 014|
+3
+normal! 017|
 wincmd w
 argglobal
 if bufexists("term://.//84960:/bin/zsh") | buffer term://.//84960:/bin/zsh | else | edit term://.//84960:/bin/zsh | endif
@@ -256,7 +282,7 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 276 - ((14 * winheight(0) + 7) / 15)
+let s:l = 276 - ((19 * winheight(0) + 10) / 20)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -273,12 +299,12 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 21 - ((9 * winheight(0) + 7) / 15)
+let s:l = 3060 - ((19 * winheight(0) + 10) / 20)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-21
-normal! 035|
+3060
+normal! 04|
 wincmd w
 argglobal
 if bufexists("term://.//86154:/bin/zsh") | buffer term://.//86154:/bin/zsh | else | edit term://.//86154:/bin/zsh | endif
@@ -290,35 +316,37 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 2658 - ((14 * winheight(0) + 7) / 15)
+let s:l = 3975 - ((19 * winheight(0) + 10) / 20)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-2658
+3975
 normal! 0
 wincmd w
-6wincmd w
-exe 'vert 1resize ' . ((&columns * 31 + 181) / 362)
-exe '2resize ' . ((&lines * 27 + 33) / 67)
-exe 'vert 2resize ' . ((&columns * 82 + 181) / 362)
-exe '3resize ' . ((&lines * 27 + 33) / 67)
-exe 'vert 3resize ' . ((&columns * 81 + 181) / 362)
-exe '4resize ' . ((&lines * 20 + 33) / 67)
-exe 'vert 4resize ' . ((&columns * 164 + 181) / 362)
-exe '5resize ' . ((&lines * 27 + 33) / 67)
-exe 'vert 5resize ' . ((&columns * 82 + 181) / 362)
-exe '6resize ' . ((&lines * 27 + 33) / 67)
-exe 'vert 6resize ' . ((&columns * 82 + 181) / 362)
-exe '7resize ' . ((&lines * 20 + 33) / 67)
-exe 'vert 7resize ' . ((&columns * 82 + 181) / 362)
-exe '8resize ' . ((&lines * 20 + 33) / 67)
-exe 'vert 8resize ' . ((&columns * 82 + 181) / 362)
-exe '9resize ' . ((&lines * 15 + 33) / 67)
-exe 'vert 9resize ' . ((&columns * 109 + 181) / 362)
-exe '10resize ' . ((&lines * 15 + 33) / 67)
-exe 'vert 10resize ' . ((&columns * 110 + 181) / 362)
-exe '11resize ' . ((&lines * 15 + 33) / 67)
-exe 'vert 11resize ' . ((&columns * 109 + 181) / 362)
+3wincmd w
+exe 'vert 1resize ' . ((&columns * 40 + 181) / 362)
+exe '2resize ' . ((&lines * 25 + 33) / 67)
+exe 'vert 2resize ' . ((&columns * 58 + 181) / 362)
+exe '3resize ' . ((&lines * 25 + 33) / 67)
+exe 'vert 3resize ' . ((&columns * 100 + 181) / 362)
+exe '4resize ' . ((&lines * 17 + 33) / 67)
+exe 'vert 4resize ' . ((&columns * 79 + 181) / 362)
+exe '5resize ' . ((&lines * 17 + 33) / 67)
+exe 'vert 5resize ' . ((&columns * 79 + 181) / 362)
+exe '6resize ' . ((&lines * 9 + 33) / 67)
+exe 'vert 6resize ' . ((&columns * 80 + 181) / 362)
+exe '7resize ' . ((&lines * 9 + 33) / 67)
+exe 'vert 7resize ' . ((&columns * 80 + 181) / 362)
+exe '8resize ' . ((&lines * 33 + 33) / 67)
+exe 'vert 8resize ' . ((&columns * 80 + 181) / 362)
+exe '9resize ' . ((&lines * 33 + 33) / 67)
+exe 'vert 9resize ' . ((&columns * 80 + 181) / 362)
+exe '10resize ' . ((&lines * 20 + 33) / 67)
+exe 'vert 10resize ' . ((&columns * 106 + 181) / 362)
+exe '11resize ' . ((&lines * 20 + 33) / 67)
+exe 'vert 11resize ' . ((&columns * 107 + 181) / 362)
+exe '12resize ' . ((&lines * 20 + 33) / 67)
+exe 'vert 12resize ' . ((&columns * 106 + 181) / 362)
 tabnext 1
 if exists('s:wipebuf') && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf
