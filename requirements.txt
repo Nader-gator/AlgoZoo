@@ -1,3 +1,4 @@
+PyYaml
 astroid==2.1.0
 autopep8==1.4.3
 certifi==2018.11.29

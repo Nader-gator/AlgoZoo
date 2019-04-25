@@ -1,19 +1,25 @@
 from django.shortcuts import render
 
+
 def home(request):
-  return render(request, 'zoo/home.html')
+    return render(request, 'zoo/home.html')
+
 
 def bubble_sort(request):
-  return render(request, 'zoo/bubblesort.html')
+    return render(request, 'zoo/bubblesort.html')
+
 
 def quick_sort(request):
-  return render(request,'zoo/quicksort.html')
+    return render(request, 'zoo/quicksort.html')
+
 
 def merge_sort(request):
-  return render(request, 'zoo/mergesort.html')
+    return render(request, 'zoo/mergesort.html')
+
 
 def bsearch(request):
-  return render(request, 'zoo/bsearch.html')
+    return render(request, 'zoo/bsearch.html')
+
 
 def binarytree(request):
-  return render(request,'zoo/binarytree.html')
+    return render(request, 'zoo/binarytree.html')

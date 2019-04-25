@@ -1,0 +1,39 @@
+{% load static %}
+<html lang="en">
+  <head>
+    <title>Problem</title>
+    <style type="text/css" media="screen">
+      #editor {
+        width: 70%;
+        height: 60%;
+        margin-left: 15%;
+        margin-top: 5%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class='body'>
+      <div id="editor"><textarea id='answer'>{{ problem }}</textarea></div>
+      <form action="{% url 'results' code_id=id %}" id='form' method="post">
+      {% csrf_token %}
+      <input type="hidden" value="" name="answer" id='post-answer'>
+      <input type="submit" value="Submit">
+      </form>
+    </div>
+
+    <script
+      src={% static 'ace/src-min/ace.js' %}
+      type="text/javascript"
+      charset="utf-8"
+    ></script>
+    <script>
+      var editor = ace.edit("editor");
+      editor.setTheme("ace/theme/monokai");
+      editor.session.setMode("ace/mode/python");
+      var editorEl = document.getElementById('editor')
+      document.getElementById('form').addEventListener('submit',function(){
+        document.getElementById('post-answer').value = editor.getValue()
+      })
+    </script>
+  </body>
+</html>

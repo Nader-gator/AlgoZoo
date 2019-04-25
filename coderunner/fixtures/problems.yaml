@@ -1,0 +1,7 @@
+- model: coderunner.Test
+  pk: 1
+  fields:
+    title: Binary Search
+    description: Write a simple binary search function
+    file_name: binarysearch.py
+    test_name: binarysearch_test.py
