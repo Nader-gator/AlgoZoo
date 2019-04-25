@@ -1,10 +1,9 @@
 from django.shortcuts import render
 from .models import Test
-import os, sys, imp
+import os, imp
 from django.conf import settings
 from django.urls import reverse
 from django.http import HttpResponseRedirect
-import pdb
 
 
 def home(request):
@@ -42,5 +41,4 @@ def result(request, code_id):
 
     results = test_function(answer_function)
 
-    pdb.set_trace()
     return render(request, 'coderunner/result.html')
