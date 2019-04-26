@@ -27,7 +27,11 @@ def result(request, code_id):
 
     answer = request.POST.get('answer')
     answer_module = imp.new_module('answer_module')
-    exec(answer, answer_module.__dict__)
+    try:
+        exec(answer, answer_module.__dict__)
+    except Exception as e:
+        context = {'error': str(e)}
+        return render(request, 'coderunner/result.html', context)
     answer_function = answer_module.answer
 
     test = Test.objects.get(id=code_id)

@@ -31,9 +31,9 @@ def test_results(binary_search):
                 'number':
                 i + 1
             })
-        except:
+        except Exception as e:
             test_results.append({
-                'result': 'Syntax Error',
+                'result': 'Syntax Error: ' + str(e),
                 'testcase': array,
                 'number': i + 1
             })

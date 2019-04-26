@@ -6,6 +6,9 @@
   </head>
   <body>
     <h1>RESULTS</h1>
+    {% if error %}
+    <p>{{ error }}</p>
+    {% else %}
     <ul>
       {% for result in results %}
       <li>
@@ -19,5 +22,6 @@
       </li>
       {% endfor %}
     </ul>
+    {% endif %}
   </body>
 </html>
