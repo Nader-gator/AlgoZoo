@@ -21,7 +21,20 @@ def test_results(binary_search):
     test_results = []
 
     for i, array in enumerate(test_arrays):
-        test_results.append(
-            binary_search(array, test_targets[i]) == correct_binary_search(
-                array, test_targets[i]))
+        try:
+            test_results.append({
+                'result':
+                binary_search(array, test_targets[i]) == correct_binary_search(
+                    array, test_targets[i]),
+                'testcase':
+                array,
+                'number':
+                i + 1
+            })
+        except:
+            test_results.append({
+                'result': 'Syntax Error',
+                'testcase': array,
+                'number': i + 1
+            })
     return test_results

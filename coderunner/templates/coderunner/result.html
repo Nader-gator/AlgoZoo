@@ -8,7 +8,15 @@
     <h1>RESULTS</h1>
     <ul>
       {% for result in results %}
-      <li>{{ result }}</li>
+      <li>
+        <span>
+          Test# {{ result.number }}:
+        </span>
+        <span style="background-color: #FFFF00">{{ result.result }}</span>
+        <span>
+          Case: {{ result.testcase }}
+        </span>
+      </li>
       {% endfor %}
     </ul>
   </body>
