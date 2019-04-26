@@ -17,10 +17,32 @@
       <form action="{% url 'results' code_id=id %}" id='form' method="post">
       {% csrf_token %}
       <input type="hidden" value="" name="answer" id='post-answer'>
-      <input type="submit" value="Submit">
+      <input style='background: orange' type="submit" value="Submit">
       </form>
-    </div>
 
+    {% if error %}
+    <span style="background-color: red">{{ error }}</span> <br/>
+    {% else %}
+    <ul>
+      {% for result in results %}
+      <li>
+        <span>
+          Test# {{ result.number }}:
+        </span>
+        {% if result.result == True %}
+          <span style="background-color: green">{{ result.result }}</span>
+        {% else %}
+          <span style="background-color: yellow">{{ result.result }}</span>
+        {% endif %}
+        <span>
+          Case: {{ result.testcase }}
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <a href="{% url 'coderunner' %}">HOME</a>
+    </div>
     <script
       src={% static 'ace/src-min/ace.js' %}
       type="text/javascript"

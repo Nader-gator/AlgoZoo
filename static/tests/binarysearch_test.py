@@ -5,8 +5,6 @@ def correct_binary_search(array, target):
     midpoint = array[midpoint_index]
     if midpoint == target:
         return midpoint_index
-    if len(array) < 2:
-        return -1
     if target < midpoint:
         return correct_binary_search(array[0:midpoint_index], target)
     elif target > midpoint:
@@ -26,8 +24,10 @@ def test_results(binary_search):
                 'result':
                 binary_search(array, test_targets[i]) == correct_binary_search(
                     array, test_targets[i]),
-                'testcase':
-                array,
+                'testcase': {
+                    'array': array,
+                    'target': test_targets[i]
+                },
                 'number':
                 i + 1
             })

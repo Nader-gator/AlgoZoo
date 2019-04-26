@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .models import Test
-import os, imp
+import os, types
 from django.conf import settings
 from django.urls import reverse
 from django.http import HttpResponseRedirect
@@ -26,12 +26,12 @@ def result(request, code_id):
         return HttpResponseRedirect(reverse('coderunner'))
 
     answer = request.POST.get('answer')
-    answer_module = imp.new_module('answer_module')
+    answer_module = types.ModuleType('answer_module')
     try:
         exec(answer, answer_module.__dict__)
     except Exception as e:
-        context = {'error': str(e)}
-        return render(request, 'coderunner/result.html', context)
+        context = {'error': str(e), 'problem': answer, 'id': code_id}
+        return render(request, 'coderunner/test.html', context)
     answer_function = answer_module.answer
 
     test = Test.objects.get(id=code_id)
@@ -39,10 +39,10 @@ def result(request, code_id):
     test_file = open(test_path, 'r').readlines()
     test_text = ''.join(test_file)
 
-    test_module = imp.new_module('test_module')
+    test_module = types.ModuleType('test_module')
     exec(test_text, test_module.__dict__)
     test_function = test_module.test_results
 
     results = test_function(answer_function)
-    context = {'results': results}
-    return render(request, 'coderunner/result.html', context)
+    context = {'results': results, 'problem': answer, 'id': code_id}
+    return render(request, 'coderunner/test.html', context)
