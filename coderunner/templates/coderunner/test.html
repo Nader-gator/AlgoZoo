@@ -1,7 +1,7 @@
+{% extends 'coderunner/base.html' %}
 {% load static %}
-<html lang="en">
-  <head>
-    <title>Problem</title>
+    {% block title %}Problem{% endblock title %}
+    {% block head %}
     <style type="text/css" media="screen">
       #editor {
         width: 70%;
@@ -10,37 +10,37 @@
         margin-top: 5%;
       }
     </style>
-  </head>
-  <body>
-    <div class='body'>
-      <div id="editor"><textarea id='answer'>{{ problem }}</textarea></div>
-      <form action="{% url 'results' code_id=id %}" id='form' method="post">
-      {% csrf_token %}
-      <input type="hidden" value="" name="answer" id='post-answer'>
-      <input style='background: orange' type="submit" value="Submit">
-      </form>
+    {% endblock head %}
+    {% block content %}
+        <div class='body'>
+          <div id="editor"><textarea id='answer'>{{ problem }}</textarea></div>
+          <form action="{% url 'results' code_id=id %}" id='form' method="post">
+          {% csrf_token %}
+          <input type="hidden" value="" name="answer" id='post-answer'>
+          <input style='background: orange' type="submit" value="Submit">
+          </form>
 
-    {% if error %}
-    <span style="background-color: red">{{ error }}</span> <br/>
-    {% else %}
-    <ul>
-      {% for result in results %}
-      <li>
-        <span>
-          Test# {{ result.number }}:
-        </span>
-        {% if result.result == True %}
-          <span style="background-color: green">{{ result.result }}</span>
+        {% if error %}
+        <span style="background-color: red">{{ error }}</span> <br/>
         {% else %}
-          <span style="background-color: yellow">{{ result.result }}</span>
+        <ul>
+          {% for result in results %}
+          <li>
+            <span>
+              Test# {{ result.number }}:
+            </span>
+            {% if result.result == True %}
+              <span style="background-color: green">{{ result.result }}</span>
+            {% else %}
+              <span style="background-color: yellow">{{ result.result }}</span>
+            {% endif %}
+            <span>
+              Case: {{ result.testcase }}
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
         {% endif %}
-        <span>
-          Case: {{ result.testcase }}
-        </span>
-      </li>
-      {% endfor %}
-    </ul>
-    {% endif %}
     <a href="{% url 'coderunner' %}">HOME</a>
     </div>
     <script
@@ -57,5 +57,4 @@
         document.getElementById('post-answer').value = editor.getValue()
       })
     </script>
-  </body>
-</html>
+{% endblock content %}
