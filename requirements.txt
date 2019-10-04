@@ -16,3 +16,4 @@ six==1.12.0
 virtualenv==16.4.1
 virtualenv-clone==0.5.1
 wrapt==1.11.1
+django-heroku==0.3.1

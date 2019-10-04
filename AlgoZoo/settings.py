@@ -22,9 +22,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '7398v4kg8s%a%6r2+4l^4%*dh9^ucw918zxtybr+ta9qd^+mpb'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('production', True)
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ['localhost', 'algozoo.herokuapp.com']
 
 # Application definition
 
@@ -119,3 +119,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATIC_URL = '/static/'
+LOGIN_URL = '/coderunner/login/'
+LOGIN_REDIRECT_URL = 'coderunner'
+
+if not DEBUG:
+    import django_heroku
+    django_heroku.settings(locals())
