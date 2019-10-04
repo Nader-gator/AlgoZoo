@@ -22,7 +22,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '7398v4kg8s%a%6r2+4l^4%*dh9^ucw918zxtybr+ta9qd^+mpb'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('production', True)
+DEBUG = not os.environ.get('production', False)
 
 ALLOWED_HOSTS = ['localhost', 'algozoo.herokuapp.com']
 
