@@ -29,6 +29,7 @@ ALLOWED_HOSTS = ['localhost', 'algozoo.herokuapp.com']
 # Application definition
 
 INSTALLED_APPS = [
+    'django_extensions',
     'zoo.apps.ZooConfig',
     'coderunner.apps.CoderunnerConfig',
     'AlgoZoo.apps.AlgoZooConfig',
