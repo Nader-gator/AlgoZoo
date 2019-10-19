@@ -14,9 +14,16 @@
       </h2>
     </a>
     <ul>
-      {% for test in tests %}
+      {% for test,score in tests.items %}
       <li>
-        <a href="{% url 'code_display' code_id=test.id %}">{{ test.title }}</a>
+        <a href="{% url 'code_display' code_id=test.id %}"
+          >{{ test.title }}: {{ score }}/{{ test.max_score }}
+        </a>
+          <small>
+              {% for key,value in test.get_score_breakdown %}
+                  <p>{{ key }}: <b>{{ value }}</b></p>
+              {% endfor %}
+          </small>
       </li>
       {% endfor %}
     </ul>

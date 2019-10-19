@@ -13,9 +13,14 @@
     {% endblock head %}
     {% block content %}
         <div class='body'>
+            <p>{{ test.description }}</p>
           <div id="editor"><textarea id='answer'>{{ problem }}</textarea></div>
-          <form action="{% url 'results' code_id=id %}" id='form' method="post">
+          <form action="{% url 'code_display' code_id=id %}" id='form' method="post">
           {% csrf_token %}
+          <input type="hidden" name="time" value="{{ time }}">
+          <label> Solved
+          <input type="checkbox" name="solved" >
+          </label>
           <input type="hidden" value="" name="answer" id='post-answer'>
           <input style='background: orange' type="submit" value="Submit">
           </form>

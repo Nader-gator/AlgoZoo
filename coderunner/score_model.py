@@ -1,5 +1,5 @@
 from math import log
-from datetime import date, timedelta
+from datetime import date
 
 
 class SharedMethods:
@@ -12,19 +12,19 @@ class SharedMethods:
     # PRIVATE CHANGING METHODS
     @classmethod
     def _record_is_solved(cls, record):
-        return record['solved']
+        return record.solved
 
     @classmethod
     def _get_record_solve_day(cls, record):
         if cls.record_is_solved(record):
-            return record['date']
+            return record.attempt_date
         else:
             return False
 
     @classmethod
     def _get_solve_duration(cls, record):
         if cls.record_is_solved(record):
-            return record['solve_time']
+            return record.solved_time_minutes
         else:
             return False
 
@@ -169,8 +169,9 @@ class DoubleBonus(SharedMethods):
         # assuming sorted, input: Datetime
         if len(records) < 2:
             return 0
-        last_record = records[-1]
-        s_last_record = records[-2]
+        rec_length = len(records)
+        last_record = records[rec_length-1]
+        s_last_record = records[rec_length-2]
         last_date, s_last_date = cls.get_record_solve_day((
             last_record, s_last_record
         ))

@@ -1,0 +1,2722 @@
+FUNCTION  1()
+Called 8 times
+Total time:   0.001150
+ Self time:   0.001059
+
+count  total (s)   self (s)
+    8              0.000084   if exists('w:matchup_match_id_list')
+                                for l:id in w:matchup_match_id_list
+                                  silent! call matchdelete(l:id)
+                                endfor
+                                unlet! w:matchup_match_id_list
+                              endif
+                            
+    8              0.000057   if exists('s:match_popup')
+                                call popup_hide(s:match_popup)
+                              elseif has('nvim')
+    8   0.000348   0.000257     call s:close_floating_win()
+    8              0.000005   endif
+                            
+    8              0.000019   if exists('w:matchup_oldstatus')
+                                let &l:statusline = w:matchup_oldstatus
+                                unlet w:matchup_oldstatus
+                                if exists('#User#MatchupOffscreenLeave')
+                                  doautocmd <nomodeline> User MatchupOffscreenLeave
+                                endif
+                              endif
+    8              0.000056   if exists('w:matchup_statusline')
+                                unlet w:matchup_statusline
+                              endif
+                            
+    8              0.000024   let w:matchup_need_clear = 0
+
+FUNCTION  2()
+Called 8 times
+Total time:   0.001480
+ Self time:   0.000331
+
+count  total (s)   self (s)
+                              ""
+                              " fade feature: remove highlights after a certain time
+                              " {level}
+                              "   =  0: prepare for possible loss of cursor support
+                              "   =  1: new highlights are coming (cancel prior fade)
+                              "   =  2: end of new highlights
+                              " {pos}     [lnum, column] of current match
+                              " {token}   in/out saves state between calls
+                              "
+                              " returns 1 if highlighting should be canceled
+                            
+    8              0.000070   if !g:matchup_matchparen_deferred || !exists('w:matchup_fade_timer')
+    8              0.000022     if a:level <= 0
+    8   0.001294   0.000144       call s:matchparen.clear()
+    8              0.000006     endif
+    8              0.000008     return 0
+                              endif
+                            
+                              " jumping between windows
+                              if a:level == 0 && win_getid() != get(s:, 'save_win')
+                                call timer_pause(w:matchup_fade_timer, 1)
+                                if exists('w:matchup_fade_pos')
+                                  unlet w:matchup_fade_pos
+                                endif
+                                call s:matchparen.clear()
+                                let s:save_win = win_getid()
+                              endif
+                            
+                              " highlighting might be stale
+                              if a:level == 0
+                                if exists('w:matchup_fade_pos')
+                                  let a:token.save_pos = w:matchup_fade_pos
+                                  unlet w:matchup_fade_pos
+                                endif
+                                if !w:matchup_need_clear
+                                  call timer_pause(w:matchup_fade_timer, 1)
+                                endif
+                                return 0
+                              endif
+                            
+                              " prepare for new highlighting
+                              if a:level == 1
+                                " if token has no save_pos, cursor was previously off of a match
+                                if !has_key(a:token, 'save_pos') || a:pos != a:token.save_pos
+                                  " clear immediately
+                                  call timer_pause(w:matchup_fade_timer, 1)
+                                  call s:matchparen.clear()
+                                  return 0
+                                endif
+                                let w:matchup_fade_pos = a:token.save_pos
+                                return 1
+                              endif
+                            
+                              " new highlighting is active
+                              if a:level == 2 && a:pos != get(w:, 'matchup_fade_pos', [])
+                                " init fade request
+                                let w:matchup_fade_pos = a:pos
+                                let w:matchup_fade_start = reltime()
+                                call timer_pause(w:matchup_fade_timer, 0)
+                              endif
+                            
+                              return 0
+
+FUNCTION  3()
+Called 7 times
+Total time:   0.008879
+ Self time:   0.000179
+
+count  total (s)   self (s)
+    7              0.000036   if !get(b:, 'matchup_matchparen_deferred', g:matchup_matchparen_deferred)
+    7   0.008829   0.000129     return s:matchparen.highlight()
+                              endif
+                            
+                              if !exists('w:matchup_timer')
+                                let s:show_delay = g:matchup_matchparen_deferred_show_delay
+                                let s:hide_delay = g:matchup_matchparen_deferred_hide_delay
+                                let w:matchup_timer = timer_start(s:show_delay, function('s:timer_callback', [ win_getid() ]), {'repeat': -1})
+                                if !exists('w:matchup_need_clear')
+                                  let w:matchup_need_clear = 0
+                                endif
+                                let s:fade_time = g:matchup_matchparen_deferred_fade_time
+                                if s:fade_time > 0
+                                  let w:matchup_fade_timer = timer_start(s:fade_time, function('s:fade_timer_callback', [ win_getid() ]), {'repeat': -1})
+                                  call timer_pause(w:matchup_fade_timer, 1)
+                                endif
+                              endif
+                            
+                              " keep the timer alive with a heartbeat
+                              let w:matchup_pulse_time = reltime()
+                            
+                              " if the timer is paused, some time has passed
+                              if timer_info(w:matchup_timer)[0].paused
+                                " unpause the timer
+                                call timer_pause(w:matchup_timer, 0)
+                            
+                                " set the hi time to the pulse time
+                                let w:matchup_hi_time = w:matchup_pulse_time
+                              endif
+
+FUNCTION  airline#extensions#ale#get_error()
+Called 71 times
+Total time:   0.008365
+ Self time:   0.000573
+
+count  total (s)   self (s)
+   71   0.008335   0.000544   return airline#extensions#ale#get('error')
+
+FUNCTION  airline#extensions#windowswap#get_status()
+Called 81 times
+Total time:   0.004006
+ Self time:   0.002161
+
+count  total (s)   self (s)
+                              " use new tab-aware api if WS is up to date
+   81   0.003524   0.001679   let s:mark = exists('*WindowSwap#IsCurrentWindowMarked') ?WindowSwap#IsCurrentWindowMarked() :(WindowSwap#HasMarkedWindow() && WindowSwap#GetMarkedWindowNum() == winnr())
+   81              0.000070   if s:mark
+                                return g:airline#extensions#windowswap#indicator_text.s:spc
+                              endif
+   81              0.000063   return ''
+
+FUNCTION  airline#extensions#coc#get_error()
+Called 71 times
+Total time:   0.002783
+ Self time:   0.000347
+
+count  total (s)   self (s)
+   71   0.002755   0.000319   return airline#extensions#coc#get('error')
+
+FUNCTION  coc#util#do_autocmd()
+Called 1 time
+Total time:   0.000014
+ Self time:   0.000014
+
+count  total (s)   self (s)
+    1              0.000011   if exists('#User#'.a:name)
+                                exe 'doautocmd User '.a:name
+                              endif
+
+FUNCTION  airline#check_mode()
+Called 81 times
+Total time:   0.461753
+ Self time:   0.010755
+
+count  total (s)   self (s)
+   81              0.000279   if !has_key(s:contexts, a:winnr)
+                                return ''
+                              endif
+   81              0.000300   let context = s:contexts[a:winnr]
+                            
+   81              0.000244   if get(w:, 'airline_active', 1)
+   71              0.000221     let l:m = mode(1)
+   71              0.000139     if l:m ==# "i"
+   13              0.000025       let l:mode = ['insert']
+   13              0.000018     elseif l:m[0] ==# "i"
+                                  let l:mode = ['insert']
+                                elseif l:m ==# "Rv"
+                                  let l:mode =['replace']
+                                elseif l:m[0] ==# "R"
+                                  let l:mode = ['replace']
+                                elseif l:m[0] =~# '\v(v|V||s|S|)'
+                                  let l:mode = ['visual']
+                                elseif l:m ==# "t"
+                                  let l:mode = ['terminal']
+                                elseif l:m[0] ==# "c"
+    3              0.000009       let l:mode = ['commandline']
+    3              0.000004     elseif l:m ==# "no"   " does not work, most likely, Vim does not refresh the statusline in OP mode
+                                  let l:mode = ['normal']
+                                elseif l:m[0:1] ==# 'ni'
+                                  let l:mode = ['normal']
+                                  let l:m = 'ni'
+                                else
+   55              0.000103       let l:mode = ['normal']
+   55              0.000031     endif
+   71              0.000354     if exists("*VMInfos") && !empty(VMInfos())
+                                  " Vim plugin Multiple Cursors https://github.com/mg979/vim-visual-multi
+                                  let l:m = 'multi'
+                                endif
+   71              0.000503     if index(['Rv', 'no', 'ni', 'ix', 'ic', 'multi'], l:m) == -1
+   71              0.000128       let l:m = l:m[0]
+   71              0.000035     endif
+   71              0.000319     let w:airline_current_mode = get(g:airline_mode_map, l:m, l:m)
+   71              0.000042   else
+   10              0.000024     let l:mode = ['inactive']
+   10              0.000046     let w:airline_current_mode = get(g:airline_mode_map, '__')
+   10              0.000006   endif
+                            
+   81              0.000237   if g:airline_detect_modified && &modified
+   71              0.000250     call add(l:mode, 'modified')
+   71              0.000037   endif
+                            
+   81              0.000141   if g:airline_detect_paste && &paste
+                                call add(l:mode, 'paste')
+                              endif
+                            
+   81              0.000568   if g:airline_detect_crypt && exists("+key") && !empty(&key)
+                                call add(l:mode, 'crypt')
+                              endif
+                            
+   81              0.000123   if g:airline_detect_spell && &spell
+                                call add(l:mode, 'spell')
+                              endif
+                            
+   81              0.000101   if &readonly || ! &modifiable
+                                call add(l:mode, 'readonly')
+                              endif
+                            
+   81              0.000610   let mode_string = join(l:mode)
+   81              0.000332   if get(w:, 'airline_lastmode', '') != mode_string
+   10   0.004429   0.000160     call airline#highlighter#highlight_modified_inactive(context.bufnr)
+   10   0.442821   0.000309     call airline#highlighter#highlight(l:mode, context.bufnr)
+   10   0.004431   0.000214     call airline#util#doautocmd('AirlineModeChanged')
+   10              0.000046     let w:airline_lastmode = mode_string
+   10              0.000008   endif
+                            
+   81              0.000079   return ''
+
+FUNCTION  4()
+Called 11 times
+Total time:   0.019226
+ Self time:   0.004105
+
+count  total (s)   self (s)
+   11              0.000069   if !g:matchup_matchparen_enabled | return | endif
+                            
+   11              0.000102   if has('vim_starting') | return | endif
+                            
+   11              0.000050   if !g:matchup_matchparen_pumvisible && pumvisible() | return | endif
+                            
+   11              0.000080   if !get(b:, 'matchup_matchparen_enabled', 1) && get(b:, 'matchup_matchparen_fallback', 1) && s:pi_paren_sid()
+                                return call(s:pi_paren_fcn, [])
+                              endif
+                            
+   11              0.000051   if !get(b:, 'matchup_matchparen_enabled', 1) | return | endif
+                            
+   11              0.000079   let l:force_update    = a:0 >= 1 ? a:1 : 0
+   11              0.000089   let l:changing_insert = a:0 >= 2 ? a:2 : 0
+   11              0.000110   let l:real_mode = l:changing_insert ? v:insertmode : mode()
+                            
+   11   0.001943   0.000472   if !l:force_update && exists('w:last_changedtick') && exists('w:last_cursor') && matchup#pos#equal(w:last_cursor, matchup#pos#get_cursor()) && w:last_changedtick == b:changedtick
+    3              0.000011     return
+                              endif
+    8              0.000034   let w:last_changedtick = b:changedtick
+    8   0.000213   0.000133   let w:last_cursor = matchup#pos#get_cursor()
+                            
+    8   0.000374   0.000273   call matchup#perf#tic('matchparen.highlight')
+                            
+                              " request eventual clearing of stale matches
+    8              0.000037   let l:token = {}
+    8   0.001594   0.000114   call self.fade(0, [], l:token)
+                            
+    8              0.000021   let l:modes = g:matchup_matchparen_nomode
+    8              0.000035   if get(g:, 'matchup_matchparen_novisual', 0)  " deprecated option name
+                                let l:modes .= "vV\<c-v>"
+                              endif
+    8              0.000077   if stridx(l:modes, l:real_mode) >= 0
+                                return
+                              endif
+                            
+                              " don't get matches when inside a closed fold
+    8              0.000112   if foldclosed(line('.')) > -1
+                                return
+                              endif
+                            
+                              " give up when cursor is far into a very long line
+    8              0.000114   if &synmaxcol && col('.') > &synmaxcol
+                                return
+                              endif
+                            
+                              " in insert mode, cursor is treated as being one behind
+    8              0.000076   let l:insertmode = l:real_mode ==# 'i'
+                            
+                              " start the timeout period
+    8              0.000185   let l:timeout = l:insertmode ? get(b:, 'matchup_matchparen_insert_timeout',           g:matchup_matchparen_insert_timeout) : get(b:, 'matchup_matchparen_timeout',           g:matchup_matchparen_timeout)
+    8   0.000963   0.000621   call matchup#perf#timeout_start(l:timeout)
+                            
+    8   0.011666   0.000467   let l:current = matchup#delim#get_current('all', 'both_all', { 'insertmode': l:insertmode,   'stopline': g:matchup_matchparen_stopline,   'highlighting': 1, })
+    8   0.000552   0.000106   call matchup#perf#toc('matchparen.highlight', 'get_current')
+    8              0.000018   if empty(l:current)
+    8              0.000043     if get(b:, 'matchup_matchparen_deferred', g:matchup_matchparen_deferred) && get(b:, 'matchup_matchparen_hi_surround_always',        g:matchup_matchparen_hi_surround_always)
+                                   call s:highlight_surrounding(l:insertmode)
+                                endif
+    8              0.000027     return
+                              endif
+                            
+                              let l:corrlist = matchup#delim#get_matching(l:current, { 'stopline': g:matchup_matchparen_stopline,   'highlighting': 1, })
+                              call matchup#perf#toc('matchparen.highlight', 'get_matching')
+                              if empty(l:corrlist) | return | endif
+                            
+                              if g:matchup_transmute_enabled
+                                if !exists('w:matchup_matchparen_context')
+                                  let w:matchup_matchparen_context = { 'normal': {   'current':   {},   'corrlist':  [],  }, 'prior': {}, 'counter': 0,}
+                                endif
+                            
+                                let w:matchup_matchparen_context.counter += 1
+                            
+                                if !l:insertmode
+                                  let w:matchup_matchparen_context.prior = copy(w:matchup_matchparen_context.normal)
+                            
+                                  let w:matchup_matchparen_context.normal.current = l:current
+                                  let w:matchup_matchparen_context.normal.corrlist = l:corrlist
+                                endif
+                            
+                                " if transmuted, highlight again (will reset timeout)
+                                if matchup#transmute#tick(l:insertmode)
+                                  " no force_update here because it would screw up prior
+                                  return s:matchparen.highlight(0, l:changing_insert)
+                                endif
+                              endif
+                            
+                              if !has_key(l:current, 'match_index') || len(l:corrlist) <= (l:current.side ==# 'mid' ? 2 : 1) && !g:matchup_matchparen_singleton
+                                " TODO this doesn't catch every case, needs refactor
+                                " TODO singleton doesn't work right for mids
+                                return
+                              endif
+                            
+                              " prepare for (possibly) new highlights
+                              let l:pos = [l:current.lnum, l:current.cnum]
+                              if self.fade(1, l:pos, l:token)
+                                return
+                              endif
+                            
+                              " store flag meaning highlighting is active
+                              let w:matchup_need_clear = 1
+                            
+                              " disable off-screen when scrolling with j/k
+                              let l:scrolling = get(g:matchup_matchparen_offscreen, 'scrolloff', 0) && winheight(0) > 2*&scrolloff && (line('.') == line('w$')-&scrolloff     && line('$') != line('w$')     || line('.') == line('w0')+&scrolloff)
+                            
+                              " show off-screen matches
+                              let l:method = get(g:matchup_matchparen_offscreen, 'method', '')
+                              if !empty(l:method) && l:method !=# 'none' && !l:current.skip && !l:scrolling
+                                call s:do_offscreen(l:current, l:method)
+                              endif
+                            
+                              " add highlighting matches
+                              call s:add_matches(l:corrlist, l:current)
+                            
+                              " highlight the background between parentheses
+                              if g:matchup_matchparen_hi_background >= 1
+                                call s:highlight_background(l:corrlist)
+                              endif
+                            
+                              " new highlights done, request fade away
+                              call self.fade(2, l:pos, l:token)
+                            
+                              call matchup#perf#toc('matchparen.highlight', 'end')
+
+FUNCTION  <SNR>169_GetCounts()
+Called 142 times
+Total time:   0.003574
+ Self time:   0.001621
+
+count  total (s)   self (s)
+  142   0.001555   0.000651     if !s:BufferCacheExists(a:buffer)
+  142   0.001925   0.000877         return s:CreateCountDict()
+                                endif
+                            
+                                call s:UpdateCacheIfNecessary(a:buffer)
+                            
+                                return g:ale_buffer_info[a:buffer].count
+
+FUNCTION  airline#extensions#coc#get_warning()
+Called 71 times
+Total time:   0.003299
+ Self time:   0.000438
+
+count  total (s)   self (s)
+   71   0.003271   0.000410   return airline#extensions#coc#get('warning')
+
+FUNCTION  <SNR>75_not_git_dir()
+Called 3 times
+Total time:   0.001004
+ Self time:   0.000263
+
+count  total (s)   self (s)
+    3   0.001002   0.000261   return s:dir(a:bufnr) !~ '[/\\]\.git\($\|[/\\]\)'
+
+FUNCTION  coc#util#cursor()
+Called 4 times
+Total time:   0.000069
+ Self time:   0.000069
+
+count  total (s)   self (s)
+    4              0.000021   let pos = getcurpos()
+    4              0.000026   let content = pos[2] == 1 ? '' : getline('.')[0: pos[2] - 2]
+    4              0.000016   return [pos[1] - 1, strchars(content)]
+
+FUNCTION  airline#parts#filetype()
+Called 81 times
+Total time:   0.001481
+ Self time:   0.000675
+
+count  total (s)   self (s)
+   81   0.001430   0.000623   return (airline#util#winwidth() < 90 && strlen(&filetype) > 3) ? matchstr(&filetype, '...'). (&encoding is? 'utf-8' ? '…' : '>') : &filetype
+
+FUNCTION  airline#extensions#tabline#formatters#unique_tail#format()
+Called 108 times
+Total time:   0.025417
+ Self time:   0.018872
+
+count  total (s)   self (s)
+  108              0.000252   let duplicates = {}
+  108              0.000172   let tails = {}
+  108              0.000139   let map = {}
+  486              0.000714   for nr in a:buffers
+  378              0.000996     let name = bufname(nr)
+  378              0.000689     if empty(name)
+                                  let map[nr] = '[No Name]'
+                                else
+  378              0.003097       let tail = fnamemodify(name, ':s?/\+$??:t')
+  378              0.000970       if has_key(tails, tail)
+                                    let duplicates[nr] = nr
+                                  endif
+  378              0.000899       let tails[tail] = 1
+  378   0.009711   0.003166       let map[nr] = airline#extensions#tabline#formatters#default#wrap_name(nr, tail)
+  378              0.000234     endif
+  378              0.000606   endfor
+                            
+  108              0.000488   let fmod = get(g:, 'airline#extensions#tabline#fnamemod', ':p:.')
+  108              0.000358   for nr in values(duplicates)
+                                let name = bufname(nr)
+                                let fnamecollapse = get(g:, 'airline#extensions#tabline#fnamecollapse', 1)
+                                if fnamecollapse
+                                  let map[nr] = airline#extensions#tabline#formatters#default#wrap_name(nr, substitute(fnamemodify(name, fmod), '\v\w\zs.{-}\ze(\\|/)', '', 'g'))
+                                else
+                                  let map[nr] = airline#extensions#tabline#formatters#default#wrap_name(nr, fnamemodify(name, fmod))
+                                endif
+                              endfor
+                            
+  108              0.000319   if has_key(map, a:bufnr)
+  108              0.000232     return map[a:bufnr]
+                              endif
+                            
+                              " if we get here, the buffer list isn't in sync with the selected buffer yet, fall back to the default
+                              return airline#extensions#tabline#formatters#default#format(a:bufnr, a:buffers)
+
+FUNCTION  <SNR>108_ws_refresh()
+Called 3 times
+Total time:   0.000023
+ Self time:   0.000023
+
+count  total (s)   self (s)
+    3              0.000016   if get(b:, 'airline_ws_changedtick', 0) == b:changedtick
+    3              0.000003     return
+                              endif
+                              unlet! b:airline_whitespace_check
+                              if get(g:, 'airline_skip_empty_sections', 0)
+                                exe ':AirlineRefresh!'
+                              endif
+                              let b:airline_ws_changedtick = b:changedtick
+
+FUNCTION  airline#mode_changed()
+Called 10 times
+Total time:   0.000574
+ Self time:   0.000473
+
+count  total (s)   self (s)
+                              " airline#visual_active
+                              " Boolean: for when to get visual wordcount
+                              " needed for the wordcount extension
+   10              0.000270   let g:airline#visual_active = (mode() =~? '[vs]')
+   10   0.000268   0.000168   call airline#update_tabline()
+
+FUNCTION  ale#Var()
+Called 5 times
+Total time:   0.000152
+ Self time:   0.000152
+
+count  total (s)   self (s)
+    5              0.000041     let l:full_name = 'ale_' . a:variable_name
+    5              0.000057     let l:vars = getbufvar(str2nr(a:buffer), '', {})
+                            
+    5              0.000040     return get(l:vars, l:full_name, g:[l:full_name])
+
+FUNCTION  ale#highlight#BufferHidden()
+Called 2 times
+Total time:   0.000459
+ Self time:   0.000115
+
+count  total (s)   self (s)
+                                " Remove highlights right away when buffers are hidden.
+                                " They will be restored later when buffers are entered.
+    2   0.000454   0.000111     call ale#highlight#RemoveHighlights()
+
+FUNCTION  airline#util#doautocmd()
+Called 10 times
+Total time:   0.004216
+ Self time:   0.000885
+
+count  total (s)   self (s)
+   10   0.004211   0.000879   exe printf("silent doautocmd %s User %s", s:nomodeline, a:event)
+
+FUNCTION  lexima#insmode#leave()
+Called 2 times
+Total time:   0.000237
+ Self time:   0.000169
+
+count  total (s)   self (s)
+    2   0.000050   0.000039   if s:input_stack.is_empty()
+    2   0.000184   0.000127     return lexima#string#to_inputtable(a:fallback)
+                              endif
+                              let input = s:input_stack.peek(a:len)
+                              let [bufnum, lnum, col, off] = getpos('.')
+                              let cr_count = len(split(input, "\r", 1)) - 1
+                              let will_input = substitute(input, "\r", '\\n\\s\\*', 'g')
+                              let illegal = search('\V\%#' . will_input, 'bcWn') ==# 0
+                              if illegal
+                                return lexima#string#to_inputtable(a:fallback)
+                              endif
+                              for i in range(1, cr_count)
+                                call setline(lnum+i, substitute(getline(lnum+i), '^\s*', '', ''))
+                              endfor
+                              if cr_count !=# 0
+                                execute 'join! ' . (cr_count + 1)
+                              endif
+                              call setpos('.', [bufnum, lnum, col, off])
+                              let curline = getline('.')
+                              let len = len(input) - cr_count
+                              let [precursor, _, postcursor] = lexima#string#take_many(curline, col-1, len)
+                              call setline('.', precursor . postcursor)
+                              return s:input_stack.pop(a:len)
+
+FUNCTION  <SNR>26_reltimefloat()
+Called 24 times
+Total time:   0.000122
+ Self time:   0.000122
+
+count  total (s)   self (s)
+   24              0.000107     return reltimefloat(a:time)
+
+FUNCTION  ale#util#Mode()
+Called 7 times
+Total time:   0.000037
+ Self time:   0.000037
+
+count  total (s)   self (s)
+    7              0.000032     return call('mode', a:000)
+
+FUNCTION  airline#extensions#tabline#tabs#map_keys()
+Called 18 times
+Total time:   0.001082
+ Self time:   0.001082
+
+count  total (s)   self (s)
+   18              0.001022   if maparg('<Plug>AirlineSelectTab1', 'n') is# ':1tabn<CR>'
+   18              0.000034     return
+                              endif
+                              let bidx_mode = get(g:, 'airline#extensions#tabline#buffer_idx_mode', 1)
+                              if bidx_mode == 1
+                                for i in range(1, 9)
+                                  exe printf('noremap <silent> <Plug>AirlineSelectTab%d :%dtabn<CR>', i, i)
+                                endfor
+                              else
+                                  for i in range(11, 99)
+                                    exe printf('noremap <silent> <Plug>AirlineSelectTab%d :%dtabn<CR>', i, i-10)
+                                  endfor
+                                endif
+                              noremap <silent> <Plug>AirlineSelectPrevTab gT
+                              " tabn {count} goes to count tab does not go {count} tab pages forward!
+                              noremap <silent> <Plug>AirlineSelectNextTab :<C-U>exe repeat(':tabn\|', v:count1)<cr>
+
+FUNCTION  WindowSwap#HasMarkedWindow()
+Called 81 times
+Total time:   0.000307
+ Self time:   0.000307
+
+count  total (s)   self (s)
+   81              0.000181    if s:markedWinNum == []
+   81              0.000066       return 0
+                               else
+                                  return 1
+                               endif
+
+FUNCTION  ale#engine#IsCheckingBuffer()
+Called 142 times
+Total time:   0.001520
+ Self time:   0.001520
+
+count  total (s)   self (s)
+  142              0.000530     let l:info = get(g:ale_buffer_info, a:buffer, {})
+                            
+  142              0.000803     return !empty(get(l:info, 'active_linter_list', []))   || !empty(get(l:info, 'active_other_sources_list', []))
+
+FUNCTION  <SNR>28_close_floating_win()
+Called 8 times
+Total time:   0.000091
+ Self time:   0.000091
+
+count  total (s)   self (s)
+    8              0.000068   if !exists('s:float_id')
+    8              0.000015     return
+                              endif
+                              if win_id2win(s:float_id) > 0
+                                execute win_id2win(s:float_id) . 'wincmd c'
+                              endif
+                              let s:float_id = 0
+
+FUNCTION  airline#extensions#fugitiveline#bufname()
+Called 81 times
+Total time:   0.010225
+ Self time:   0.009870
+
+count  total (s)   self (s)
+   81              0.000276   if !exists('b:fugitive_name')
+                                let b:fugitive_name = ''
+                                try
+                                  if bufname('%') =~? '^fugitive:' && exists('*FugitiveReal')
+                                    let b:fugitive_name = FugitiveReal(bufname('%'))
+                                  elseif exists('b:git_dir') && exists('*fugitive#repo')
+                                    if get(b:, 'fugitive_type', '') is# 'blob'
+                                      let b:fugitive_name = fugitive#repo().translate(FugitivePath(@%, ''))
+                                    endif
+                                  elseif exists('b:git_dir') && !exists('*fugitive#repo')
+                                    let buffer = fugitive#buffer()
+                                    if buffer.type('blob')
+                                      let b:fugitive_name = buffer.repo().translate(buffer.path('/'))
+                                    endif
+                                  endif
+                                catch
+                                endtry
+                              endif
+                            
+   81   0.001101   0.000745   let fmod = s:ModifierFlags()
+   81              0.000168   if empty(b:fugitive_name)
+   81              0.006450     return fnamemodify(bufname('%'), fmod)
+                              else
+                                return fnamemodify(b:fugitive_name, fmod). " [git]"
+                              endif
+
+FUNCTION  airline#extensions#ale#get()
+Called 142 times
+Total time:   0.018257
+ Self time:   0.008907
+
+count  total (s)   self (s)
+  142              0.000471   if !exists(':ALELint')
+                                return ''
+                              endif
+                            
+  142              0.000483   let error_symbol = get(g:, 'airline#extensions#ale#error_symbol', 'E:')
+  142              0.000428   let warning_symbol = get(g:, 'airline#extensions#ale#warning_symbol', 'W:')
+  142              0.000426   let checking_symbol = get(g:, 'airline#extensions#ale#checking_symbol', '...')
+  142              0.000404   let show_line_numbers = get(g:, 'airline#extensions#ale#show_line_numbers', 1)
+                            
+  142              0.000265   let is_err = a:type ==# 'error'
+                            
+  142   0.002356   0.000836   if ale#engine#IsCheckingBuffer(bufnr('')) == 1
+                                return is_err ? '' : checking_symbol
+                              endif
+                            
+  142              0.000297   let symbol = is_err ? error_symbol : warning_symbol
+                            
+  142   0.005718   0.000712   let counts = ale#statusline#Count(bufnr(''))
+  142              0.000617   if type(counts) == type({}) && has_key(counts, 'error')
+                                " Use the current Dictionary format.
+  142              0.000296     let errors = counts.error + counts.style_error
+  142              0.000300     let num = is_err ? errors : counts.total - errors
+  142              0.000087   else
+                                " Use the old List format.
+                                let num = is_err ? counts[0] : counts[1]
+                              endif
+                            
+  142              0.000179   if show_line_numbers == 1
+  142   0.004334   0.001510     return s:airline_ale_count(num, symbol) . <sid>airline_ale_get_line_number(num, a:type)
+                              else
+                                return s:airline_ale_count(num, symbol)
+                              endif
+
+FUNCTION  airline#extensions#tabline#get()
+Called 18 times
+Total time:   0.004001
+ Self time:   0.001627
+
+count  total (s)   self (s)
+   18              0.000197   let show_buffers = get(g:, 'airline#extensions#tabline#show_buffers', 1)
+   18              0.000084   let show_tabs = get(g:, 'airline#extensions#tabline#show_tabs', 1)
+                            
+   18              0.000069   let curtabcnt = tabpagenr('$')
+   18              0.000056   if curtabcnt != s:current_tabcnt
+                                let s:current_tabcnt = curtabcnt
+                                call airline#extensions#tabline#tabs#invalidate()
+                                call airline#extensions#tabline#buffers#invalidate()
+                                call airline#extensions#tabline#ctrlspace#invalidate()
+                                call airline#extensions#tabline#tabws#invalidate()
+                              endif
+                            
+   18              0.000118   if !exists('#airline#BufAdd#*')
+                                autocmd airline BufAdd * call <sid>update_tabline()
+                              endif
+   18              0.000021   if s:ctrlspace
+                                return airline#extensions#tabline#ctrlspace#get()
+                              elseif s:tabws
+                                return airline#extensions#tabline#tabws#get()
+                              elseif show_buffers && curtabcnt == 1 || !show_tabs
+                                return airline#extensions#tabline#buffers#get()
+                              else
+   18   0.002795   0.000421     return airline#extensions#tabline#tabs#get()
+                              endif
+
+FUNCTION  <SNR>102_exec_separator()
+Called 588 times
+Total time:   0.323164
+ Self time:   0.022619
+
+count  total (s)   self (s)
+  588              0.000867   if pumvisible()
+                                return
+                              endif
+  588              0.001966   let group = a:from.'_to_'.a:to.a:suffix
+  588   0.093001   0.003582   let l:from = airline#themes#get_highlight(a:from.a:suffix)
+  588   0.087567   0.003342   let l:to = airline#themes#get_highlight(a:to.a:suffix)
+  588              0.000589   if a:inverse
+  196              0.000723     let colors = [ l:from[1], l:to[1], l:from[3], l:to[3] ]
+  196              0.000131   else
+  392              0.001510     let colors = [ l:to[1], l:from[1], l:to[3], l:from[3] ]
+  392              0.000185   endif
+  588              0.002530   let a:dict[group] = colors
+  588   0.131140   0.004239   call airline#highlighter#exec(group, colors)
+
+FUNCTION  airline#extensions#tabline#title()
+Called 72 times
+Total time:   0.050418
+ Self time:   0.004046
+
+count  total (s)   self (s)
+   72              0.000182   let title = ''
+   72              0.000101   if s:taboo
+                                let title = TabooTabTitle(a:n)
+                              endif
+                            
+   72              0.000363   if empty(title) && exists('*gettabvar')
+   72              0.000315     let title = gettabvar(a:n, 'title')
+   72              0.000047   endif
+                            
+   72              0.000110   if empty(title)
+   72              0.000281     let buflist = tabpagebuflist(a:n)
+   72              0.000184     let winnr = tabpagewinnr(a:n)
+   72   0.001146   0.000703     let all_buffers = airline#extensions#tabline#buflist#list()
+   72   0.047174   0.001245     return airline#extensions#tabline#get_buffer_name( buflist[winnr - 1], filter(buflist, 'index(all_buffers, v:val) != -1'))
+                              endif
+                            
+                              return title
+
+FUNCTION  <SNR>104_ModifierFlags()
+Called 81 times
+Total time:   0.000356
+ Self time:   0.000356
+
+count  total (s)   self (s)
+   81              0.000308   return (exists("+autochdir") && &autochdir) ? ':p' : ':.'
+
+FUNCTION  <SNR>152_can_diffoff()
+Called 2 times
+Total time:   0.000023
+ Self time:   0.000023
+
+count  total (s)   self (s)
+    2              0.000021   return getwinvar(bufwinnr(a:buf), '&diff') && !empty(getwinvar(bufwinnr(a:buf), 'fugitive_diff_restore'))
+
+FUNCTION  airline#util#shorten()
+Called 142 times
+Total time:   0.004162
+ Self time:   0.002748
+
+count  total (s)   self (s)
+  142   0.002729   0.001316   if airline#util#winwidth() < a:winwidth && len(split(a:text, '\zs')) > a:minwidth
+                                if get(a:000, 0, 0)
+                                  " shorten from tail
+                                  return '…'.matchstr(a:text, '.\{'.a:minwidth.'}$')
+                                else
+                                  " shorten from beginning of string
+                                  return matchstr(a:text, '^.\{'.a:minwidth.'}').'…'
+                                endif
+                              else
+  142              0.000135     return a:text
+                              endif
+
+FUNCTION  matchup#pos#set_cursor()
+Called 4 times
+Total time:   0.000173
+ Self time:   0.000042
+
+count  total (s)   self (s)
+    4   0.000170   0.000039   call cursor(s:parse_args(a:000))
+
+FUNCTION  matchup#pos#equal()
+Called 7 times
+Total time:   0.001423
+ Self time:   0.000315
+
+count  total (s)   self (s)
+    7   0.000654   0.000153   let l:pos1 = s:parse_args(a:p1)
+    7   0.000695   0.000088   let l:pos2 = s:parse_args(a:p2)
+    7              0.000066   return l:pos1[:1] == l:pos2[:1]
+
+FUNCTION  airline#extensions#tabline#tabs#get()
+Called 18 times
+Total time:   0.002374
+ Self time:   0.001292
+
+count  total (s)   self (s)
+   18              0.000460   let curbuf = bufnr('%')
+   18              0.000056   let curtab = tabpagenr()
+   18              0.000030   try
+   18   0.001356   0.000274     call airline#extensions#tabline#tabs#map_keys()
+   18              0.000025   catch
+                                " no-op
+                              endtry
+   18              0.000147   if curbuf == s:current_bufnr && curtab == s:current_tabnr && &columns == s:column_width
+   18              0.000134     if !g:airline_detect_modified || getbufvar(curbuf, '&modified') == s:current_modified
+   18              0.000072       return s:current_tabline
+                                endif
+                              endif
+                            
+                              let b = airline#extensions#tabline#new_builder()
+                            
+                              call airline#extensions#tabline#add_label(b, 'tabs', 0)
+                            
+                              function! b.get_group(i) dict
+                                let curtab = tabpagenr()
+                                let group = 'airline_tab'
+                                if a:i == curtab
+                                  let group = 'airline_tabsel'
+                                  if g:airline_detect_modified
+                                    for bi in tabpagebuflist(curtab)
+                                      if getbufvar(bi, '&modified')
+                                        let group = 'airline_tabmod'
+                                      endif
+                                    endfor
+                                  endif
+                                  let s:current_modified = (group == 'airline_tabmod') ? 1 : 0
+                                endif
+                                return group
+                              endfunction
+                            
+                              function! b.get_title(i) dict
+                                let val = '%('
+                            
+                                if get(g:, 'airline#extensions#tabline#show_tab_nr', 1)
+                                  let tab_nr_type = get(g:, 'airline#extensions#tabline#tab_nr_type', 0)
+                                  let val .= airline#extensions#tabline#tabs#tabnr_formatter(tab_nr_type, a:i)
+                                endif
+                            
+                                return val.'%'.a:i.'T %{airline#extensions#tabline#title('.a:i.')} %)'
+                              endfunction
+                            
+                              call b.insert_titles(curtab, 1, tabpagenr('$'))
+                            
+                              call b.add_section('airline_tabfill', '')
+                              call b.split()
+                              call b.add_section('airline_tabfill', '')
+                            
+                              if get(g:, 'airline#extensions#tabline#show_close_button', 1)
+                                call b.add_section('airline_tab_right', ' %999X'. get(g:, 'airline#extensions#tabline#close_symbol', 'X').' ')
+                              endif
+                            
+                              if get(g:, 'airline#extensions#tabline#show_splits', 1) == 1
+                                let buffers = tabpagebuflist(curtab)
+                                for nr in buffers
+                                  let group = airline#extensions#tabline#group_of_bufnr(buffers, nr) . "_right"
+                                  call b.add_section_spaced(group, '%(%{airline#extensions#tabline#get_buffer_name('.nr.')}%)')
+                                endfor
+                                if get(g:, 'airline#extensions#tabline#show_buffers', 1)
+                                  call airline#extensions#tabline#add_label(b, 'buffers', 1)
+                                endif
+                              endif
+                              call airline#extensions#tabline#add_tab_label(b)
+                            
+                              let s:current_bufnr = curbuf
+                              let s:current_tabnr = curtab
+                              let s:column_width = &columns
+                              let s:current_tabline = b.build()
+                              return s:current_tabline
+
+FUNCTION  WebDevIconsGetFileTypeSymbol()
+Called 108 times
+Total time:   0.043552
+ Self time:   0.042513
+
+count  total (s)   self (s)
+  108              0.000168   if a:0 == 0
+                                let fileNodeExtension = expand('%:e')
+                                let fileNode = expand('%:t')
+                                let isDirectory = 0
+                              else
+  108              0.000487     let fileNodeExtension = fnamemodify(a:1, ':e')
+  108              0.000337     let fileNode = fnamemodify(a:1, ':t')
+  108              0.000133     if a:0 > 1
+                                  let isDirectory = a:2
+                                else
+  108              0.000138       let isDirectory = 0
+  108              0.000066     endif
+  108              0.000047   endif
+                            
+  108              0.000185   if isDirectory == 0 || g:DevIconsEnableFolderPatternMatching
+                            
+  108              0.000242     let symbol = g:WebDevIconsUnicodeDecorateFileNodesDefaultSymbol
+  108              0.000400     let fileNodeExtension = tolower(fileNodeExtension)
+  108              0.000296     let fileNode = tolower(fileNode)
+                            
+ 1080              0.004083     for [pattern, glyph] in items(g:WebDevIconsUnicodeDecorateFileNodesPatternSymbols)
+  972              0.024000       if match(fileNode, pattern) != -1
+                                    let symbol = glyph
+                                    break
+                                  endif
+  972              0.002382     endfor
+                            
+  108              0.000384     if symbol == g:WebDevIconsUnicodeDecorateFileNodesDefaultSymbol
+  108              0.000440       if has_key(g:WebDevIconsUnicodeDecorateFileNodesExactSymbols, fileNode)
+                                    let symbol = g:WebDevIconsUnicodeDecorateFileNodesExactSymbols[fileNode]
+                                  elseif ((isDirectory == 1 && g:DevIconsEnableFolderExtensionPatternMatching) || isDirectory == 0) && has_key(g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols, fileNodeExtension)
+  108              0.000442         let symbol = g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols[fileNodeExtension]
+  108              0.000125       elseif isDirectory == 1
+                                    let symbol = g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol
+                                  endif
+  108              0.000069     endif
+                            
+  108              0.000070   else
+                                let symbol = g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol
+                              endif
+                            
+  108   0.002028   0.000989   let artifactFix = s:DevIconsGetArtifactFix()
+                            
+  108              0.000239   return symbol . artifactFix
+                            
+
+FUNCTION  airline#parts#paste()
+Called 71 times
+Total time:   0.000206
+ Self time:   0.000206
+
+count  total (s)   self (s)
+   71              0.000177   return g:airline_detect_paste && &paste ? g:airline_symbols.paste : ''
+
+FUNCTION  <SNR>32_on_cursor_moved()
+Called 6 times
+Total time:   0.000356
+ Self time:   0.000277
+
+count  total (s)   self (s)
+    6              0.000060   if winnr() != s:active_winnr
+                                call s:on_window_changed('CursorMoved')
+                              endif
+    6   0.000177   0.000098   call airline#update_tabline()
+
+FUNCTION  <SNR>131_get_delim()
+Called 8 times
+Total time:   0.010594
+ Self time:   0.008005
+
+count  total (s)   self (s)
+                              " arguments: {{{2
+                              "   opts = {
+                              "     'direction'   : 'next' | 'prev' | 'current'
+                              "     'type'        : 'delim_tex'
+                              "                   | 'delim_all'
+                              "                   | 'all'
+                              "     'side'        : 'open'     | 'close'
+                              "                   | 'both'     | 'mid'
+                              "                   | 'both_all' | 'open_mid'
+                              "  }
+                              "
+                              "  }}}2
+                              " returns: {{{2
+                              "   delim = {
+                              "     type     : 'delim'
+                              "     lnum     : line number
+                              "     cnum     : column number
+                              "     match    : the actual text match
+                              "     augment  : how to match a corresponding open
+                              "     groups   : dict of captured groups
+                              "     side     : 'open' | 'close' | 'mid'
+                              "     is_open  : side == 'open'
+                              "     class    : [ c1, c2 ] identifies the kind of match_words
+                              "     regexone : the regex item, like \1foo
+                              "     regextwo : the regex_backref item, like \(group\)foo
+                              "     rematch  : regular expression to use in match highlight
+                              "   }
+                              "
+                              " }}}2
+                            
+    8              0.000042   if !get(b:, 'matchup_delim_enabled', 0)
+                                return {}
+                              endif
+                            
+    8   0.000253   0.000130   call matchup#perf#tic('s:get_delim')
+                            
+    8   0.000144   0.000087   let l:save_pos = matchup#pos#get_cursor()
+                            
+    8   0.001143   0.000238   call matchup#loader#refresh_match_words()
+                            
+                              " this contains all the patterns for the specified type and side
+    8              0.000106   let l:re = b:matchup_delim_re[a:opts.type][a:opts.side]
+                            
+    8              0.000064   let l:cursorpos = col('.')
+                            
+    8              0.000060   let l:insertmode = get(a:opts, 'insertmode', 0)
+    8              0.000047   if l:cursorpos > 1 && l:insertmode
+    2              0.000005     let l:cursorpos -= 1
+    2              0.000001   endif
+    8              0.000119   if l:cursorpos > strlen(getline('.')) && stridx("vV\<c-v>", mode()) > -1
+                                let l:cursorpos -= 1
+                              endif
+                            
+    8              0.000021   let s:invert_skip = 0
+                            
+    8              0.000065   if a:opts.direction ==# 'current'
+    8              0.000119     let l:check_skip = get(a:opts, 'check_skip', g:matchup_delim_noskips >= 2 || g:matchup_delim_noskips >= 1     && getline(line('.'))[l:cursorpos-1] =~ '[^[:punct:]]')
+    8              0.000066     if l:check_skip && matchup#delim#skip(line('.'), l:cursorpos)
+                                  return {}
+                                endif
+    8              0.000007   else
+                                " check skip if cursor is not currently in skip
+                                let l:check_skip = get(a:opts, 'check_skip', !matchup#delim#skip(line('.'), l:cursorpos) || g:matchup_delim_noskips >= 2)
+                              endif
+                            
+    8              0.000044   let a:opts.cursorpos = l:cursorpos
+                            
+                              " for current, we want to find matches that end after the cursor
+                              " note: we expect this to give false-positives with \ze
+    8              0.000032   if a:opts.direction ==# 'current'
+    8              0.000097     let l:re .= '\%>'.(l:cursorpos).'c'
+                              "  let l:re = '\%<'.(l:cursorpos+1).'c' . l:re
+    8              0.000006   endif
+                            
+                              " allow overlapping delimiters
+                              " without this, the > in <tag> would not be found
+    8              0.000067   if b:matchup_delim_re[a:opts.type]._engine_info.has_zs[a:opts.side]
+                                let l:save_cpo = &cpo
+                                noautocmd set cpo-=c
+                              else
+                                " faster than changing cpo but doesn't work right with \zs
+    8              0.000044     let l:re .= '\&'
+    8              0.000010   endif
+                            
+                              " move cursor one left for searchpos if necessary
+    8              0.000044   let l:need_restore_cursor = 0
+    8              0.000009   if l:insertmode
+    2   0.000198   0.000105     call matchup#pos#set_cursor(line('.'), col('.')-1)
+    2              0.000004     let l:need_restore_cursor = 1
+    2              0.000001   endif
+                            
+                              " stopline may depend on the current action
+    8              0.000044   let l:stopline = get(a:opts, 'stopline', s:stopline)
+                            
+                              " in the first pass, we get matching line and column numbers
+                              " this is intended to be as fast as possible, with no capture groups
+                              " we look for a match on this line (if direction == current)
+                              " or forwards or backwards (if direction == next or prev)
+                              " for current, we actually search leftwards from the cursor
+    8              0.000026   while 1
+    8   0.000306   0.000245     let l:to = matchup#perf#timeout()
+    8              0.003935     let [l:lnum, l:cnum] = a:opts.direction ==# 'next' ? searchpos(l:re, 'cnW', line('.') + l:stopline, l:to) : a:opts.direction ==# 'prev'   ? searchpos(l:re, 'bcnW',               max([line('.') - l:stopline, 1]), l:to)   : searchpos(l:re, 'bcnW', line('.'), l:to)
+    8              0.000040     if l:lnum == 0 | break | endif
+                            
+                                " note: the skip here should not be needed
+                                " in 'current' mode, but be explicit
+                                if a:opts.direction !=# 'current' && (l:check_skip || g:matchup_delim_noskips == 1     && getline(l:lnum)[l:cnum-1] =~ '[^[:punct:]]') && matchup#delim#skip(l:lnum, l:cnum) && (a:opts.direction ==# 'prev' ? (l:lnum > 1 || l:cnum > 1)     : (l:lnum < line('$') || l:cnum < len(getline('$'))))
+                            
+                                  " invalid match, move cursor and keep looking
+                                  call matchup#pos#set_cursor(a:opts.direction ==# 'next' ? matchup#pos#next(l:lnum, l:cnum) : matchup#pos#prev(l:lnum, l:cnum))
+                                  let l:need_restore_cursor = 1
+                                  continue
+                                endif
+                            
+                                break
+                              endwhile
+                            
+                              " restore cpo if necessary
+                              " note: this messes with cursor position
+    8              0.000034   if exists('l:save_cpo')
+                                noautocmd let &cpo = l:save_cpo
+                                let l:need_restore_cursor = 1
+                              endif
+                            
+                              " restore cursor
+    8              0.000054   if l:need_restore_cursor
+    2   0.000097   0.000017     call matchup#pos#set_cursor(l:save_pos)
+    2              0.000001   endif
+                            
+    8   0.001013   0.000245   call matchup#perf#toc('s:get_delim', 'first_pass')
+                            
+                              " nothing found, leave now
+    8              0.000019   if l:lnum == 0
+    8   0.000620   0.000119     call matchup#perf#toc('s:get_delim', 'nothing_found')
+    8              0.000019     return {}
+                              endif
+                            
+                              if matchup#perf#timeout_check()
+                                return {}
+                              endif
+                            
+                              let l:skip_state = 0
+                              if !l:check_skip && (!&synmaxcol || l:cnum <= &synmaxcol)
+                                " XXX: workaround an apparent obscure vim bug where the
+                                " reported syntax id is incorrect on the first synID() call
+                                call matchup#delim#skip(l:lnum, l:cnum)
+                                if matchup#perf#timeout_check()
+                                  return {}
+                                endif
+                            
+                                let l:skip_state = matchup#delim#skip(l:lnum, l:cnum)
+                              endif
+                            
+                              " now we get more data about the match in this position
+                              " there may be capture groups which need to be stored
+                            
+                              " result stub, to be filled by the parser when there is a match
+                              let l:result = { 'lnum'     : l:lnum, 'cnum'     : l:cnum, 'type'     : '', 'match'    : '', 'augment'  : '', 'groups'   : '', 'side'     : '', 'is_open'  : '', 'class'    : [], 'regexone' : '', 'regextwo' : '', 'rematch'  : '', 'skip'     : l:skip_state,}
+                            
+                              for l:type in s:types[a:opts.type]
+                                let l:parser_result = l:type.parser(l:lnum, l:cnum, a:opts)
+                                if !empty(l:parser_result)
+                                  let l:result = extend(l:parser_result, l:result, 'keep')
+                                  break
+                                endif
+                              endfor
+                            
+                              call matchup#perf#toc('s:get_delim', 'got_results')
+                            
+                              return empty(l:result.type) ? {} : l:result
+
+FUNCTION  lexima#insmode#clear_stack()
+Called 2 times
+Total time:   0.000054
+ Self time:   0.000046
+
+count  total (s)   self (s)
+    2   0.000047   0.000039   if !s:input_stack.is_empty()
+                                call s:input_stack.pop_all()
+                              endif
+
+FUNCTION  <SNR>19_notify()
+Called 18 times
+Total time:   0.002455
+ Self time:   0.002301
+
+count  total (s)   self (s)
+   18   0.000371   0.000216   let channel = s:get_channel(self)
+   18              0.000085   if empty(channel) | return '' | endif
+   18              0.000019   try
+   18              0.000027     if s:is_vim
+                                  call ch_sendraw(channel, json_encode([0, [a:method, a:args]])."\n")
+                                else
+   18              0.000700       call call('rpcnotify', [channel, a:method] + a:args)
+   18              0.000028     endif
+   18              0.000041   catch /.*/
+                                if v:exception =~# 'E475'
+                                  if get(g:, 'coc_vim_leaving', 0) | return | endif
+                                  echohl Error | echom '['.self.name.'] server connection lost' | echohl None
+                                  let name = self.name
+                                  call s:on_exit(name, 0)
+                                  execute 'silent do User ConnectionLost'.toupper(name[0]).name[1:]
+                                elseif v:exception =~# 'E12'
+                                  " neovim's bug, ignore it
+                                else
+                                  echohl Error | echo 'Error on notify ('.a:method.'): '.v:exception | echohl None
+                                endif
+                              endtry
+
+FUNCTION  airline#highlighter#exec()
+Called 838 times
+Total time:   0.187995
+ Self time:   0.044460
+
+count  total (s)   self (s)
+  838              0.001185   if pumvisible()
+                                return
+                              endif
+  838              0.001063   let colors = a:colors
+  838              0.000784   if s:is_win32term
+                                let colors[2] = s:gui2cui(get(colors, 0, ''), get(colors, 2, ''))
+                                let colors[3] = s:gui2cui(get(colors, 1, ''), get(colors, 3, ''))
+                              endif
+  838   0.111904   0.005363   let old_hi = airline#highlighter#get_highlight(a:group)
+  838              0.001586   if len(colors) == 4
+  588              0.001374     call add(colors, '')
+  588              0.000259   endif
+  838              0.001112   if g:airline_gui_mode ==# 'gui'
+  838              0.002989     let new_hi = [colors[0], colors[1], '', '', colors[4]]
+  838              0.000459   else
+                                let new_hi = ['', '', printf("%s", colors[2]), printf("%s", colors[3]), colors[4]]
+                              endif
+  838   0.022889   0.004095   let colors = s:CheckDefined(colors)
+  838   0.015985   0.004501   if old_hi != new_hi || !s:hl_group_exists(a:group)
+   75   0.007409   0.000693     let cmd = printf('hi %s%s', a:group, s:GetHiCmd(colors))
+   75              0.000938     exe cmd
+   75              0.000238     if has_key(s:hl_groups, a:group)
+   75              0.000191       let s:hl_groups[a:group] = colors
+   75              0.000043     endif
+   75              0.000031   endif
+
+FUNCTION  airline#extensions#whitespace#check()
+Called 71 times
+Total time:   0.010224
+ Self time:   0.008167
+
+count  total (s)   self (s)
+   71              0.000252   let max_lines = get(g:, 'airline#extensions#whitespace#max_lines', 20000)
+   71              0.000439   if &readonly || !&modifiable || !s:enabled || line('$') > max_lines || get(b:, 'airline_whitespace_disabled', 0)
+                                return ''
+                              endif
+   71              0.000811   let skip_check_ft = extend(s:skip_check_ft, get(g:, 'airline#extensions#whitespace#skip_indent_check_ft', {}), 'force')
+                            
+   71              0.000223   if !exists('b:airline_whitespace_check')
+                                let b:airline_whitespace_check = ''
+                                let checks = get(b:, 'airline_whitespace_checks', get(g:, 'airline#extensions#whitespace#checks', s:default_checks))
+                            
+                                let trailing = 0
+                                let check = 'trailing'
+                                if index(checks, check) > -1 && index(get(skip_check_ft, &ft, []), check) < 0
+                                  try
+                                    let regexp = get(g:, 'airline#extensions#whitespace#trailing_regexp', '\s$')
+                                    let trailing = search(regexp, 'nw')
+                                  catch
+                                    call airline#util#warning(printf('Whitespace: error occurred evaluating "%s"', regexp))
+                                    echomsg v:exception
+                                    return ''
+                                  endtry
+                                endif
+                            
+                                let mixed = 0
+                                let check = 'indent'
+                                if index(checks, check) > -1 && index(get(skip_check_ft, &ft, []), check) < 0
+                                  let mixed = s:check_mixed_indent()
+                                endif
+                            
+                                let mixed_file = ''
+                                let check = 'mixed-indent-file'
+                                if index(checks, check) > -1 && index(get(skip_check_ft, &ft, []), check) < 0
+                                  let mixed_file = s:check_mixed_indent_file()
+                                endif
+                            
+                                let long = 0
+                                if index(checks, 'long') > -1 && &tw > 0
+                                  let long = search('\%>'.&tw.'v.\+', 'nw')
+                                endif
+                            
+                                let conflicts = 0
+                                if index(checks, 'conflicts') > -1
+                                  let conflicts = s:conflict_marker()
+                                endif
+                            
+                                if trailing != 0 || mixed != 0 || long != 0 || !empty(mixed_file) || conflicts != 0
+                                  let b:airline_whitespace_check = s:symbol
+                                  if strlen(s:symbol) > 0
+                                    let space = (g:airline_symbols.space)
+                                  else
+                                    let space = ''
+                                  endif
+                            
+                                  if s:show_message
+                                    if trailing != 0
+                                      let trailing_fmt = get(g:, 'airline#extensions#whitespace#trailing_format', '[%s]trailing')
+                                      let b:airline_whitespace_check .= space.printf(trailing_fmt, trailing)
+                                    endif
+                                    if mixed != 0
+                                      let mixed_indent_fmt = get(g:, 'airline#extensions#whitespace#mixed_indent_format', '[%s]mixed-indent')
+                                      let b:airline_whitespace_check .= space.printf(mixed_indent_fmt, mixed)
+                                    endif
+                                    if long != 0
+                                      let long_fmt = get(g:, 'airline#extensions#whitespace#long_format', '[%s]long')
+                                      let b:airline_whitespace_check .= space.printf(long_fmt, long)
+                                    endif
+                                    if !empty(mixed_file)
+                                      let mixed_indent_file_fmt = get(g:, 'airline#extensions#whitespace#mixed_indent_file_format', '[%s]mix-indent-file')
+                                      let b:airline_whitespace_check .= space.printf(mixed_indent_file_fmt, mixed_file)
+                                    endif
+                                    if conflicts != 0
+                                      let conflicts_fmt = get(g:, 'airline#extensions#whitespace#conflicts_format', '[%s]conflicts')
+                                      let b:airline_whitespace_check .= space.printf(conflicts_fmt, conflicts)
+                                    endif
+                                  endif
+                                endif
+                              endif
+   71   0.002446   0.000390   return airline#util#shorten(b:airline_whitespace_check, 120, 9)
+
+FUNCTION  <SNR>102_get_array()
+Called 2014 times
+Total time:   0.016185
+ Self time:   0.016185
+
+count  total (s)   self (s)
+ 2014              0.006421   let opts=empty(a:opts) ? '' : join(a:opts, ',')
+ 2014              0.008628   return g:airline_gui_mode ==# 'gui' ? [ a:fg, a:bg, '', '', opts ] : [ '', '', a:fg, a:bg, opts ]
+
+FUNCTION  airline#parts#spell()
+Called 71 times
+Total time:   0.002133
+ Self time:   0.002133
+
+count  total (s)   self (s)
+   71              0.001044   let spelllang = g:airline_detect_spelllang ? printf(" [%s]", toupper(substitute(&spelllang, ',', '/', 'g'))) : ''
+   71              0.000137   if g:airline_detect_spell && &spell
+                                let winwidth = airline#util#winwidth()
+                                if winwidth >= 90
+                                  return g:airline_symbols.spell . spelllang
+                                elseif winwidth >= 70
+                                  return g:airline_symbols.spell
+                                else
+                                  return split(g:airline_symbols.spell, '\zs')[0]
+                                endif
+                              endif
+   71              0.000052   return ''
+
+FUNCTION  matchup#loader#refresh_match_words()
+Called 8 times
+Total time:   0.000905
+ Self time:   0.000905
+
+count  total (s)   self (s)
+    8              0.000141   if get(b:, 'match_words', ':') !~# ':'
+                                call matchup#perf#tic('refresh')
+                            
+                                " protect the cursor from the match_words function
+                                let l:save_pos = matchup#pos#get_cursor()
+                                execute 'let l:match_words = ' b:match_words
+                                if l:save_pos != matchup#pos#get_cursor()
+                                  call matchup#pos#set_cursor(l:save_pos)
+                                endif
+                            
+                                call matchup#perf#toc('refresh', 'function')
+                            
+                                if has_key(s:match_word_cache, l:match_words)
+                                  let b:matchup_delim_lists = s:match_word_cache[l:match_words].delim_lists
+                                  let b:matchup_delim_re = s:match_word_cache[l:match_words].delim_regexes
+                                  call matchup#perf#toc('refresh', 'cache_hit')
+                                else
+                                  " re-parse match words
+                                  let b:matchup_delim_lists = s:init_delim_lists()
+                                  let b:matchup_delim_re = s:init_delim_regexes()
+                                  let s:match_word_cache[l:match_words] = { 'delim_lists'  : b:matchup_delim_lists, 'delim_regexes': b:matchup_delim_re,}
+                                  call matchup#perf#toc('refresh', 'parse')
+                                endif
+                              endif
+
+FUNCTION  airline#parts#mode()
+Called 71 times
+Total time:   0.002739
+ Self time:   0.000634
+
+count  total (s)   self (s)
+   71   0.002699   0.000594   return airline#util#shorten(get(w:, 'airline_current_mode', ''), 79, 1)
+
+FUNCTION  <SNR>170_StopCursorTimer()
+Called 9 times
+Total time:   0.000086
+ Self time:   0.000086
+
+count  total (s)   self (s)
+    9              0.000021     if s:cursor_timer != -1
+    5              0.000017         call timer_stop(s:cursor_timer)
+    5              0.000010         let s:cursor_timer = -1
+    5              0.000004     endif
+
+FUNCTION  gitgutter#utility#is_active()
+Called 3 times
+Total time:   0.001949
+ Self time:   0.000259
+
+count  total (s)   self (s)
+    3   0.001946   0.000257   return g:gitgutter_enabled && gitgutter#utility#getbufvar(a:bufnr, 'enabled', 1) && !pumvisible() && s:is_file_buffer(a:bufnr) && s:exists_file(a:bufnr) && s:not_git_dir(a:bufnr)
+
+FUNCTION  airline#highlighter#get_highlight()
+Called 2014 times
+Total time:   0.269733
+ Self time:   0.123904
+
+count  total (s)   self (s)
+ 2014              0.031187   let reverse = get(g:, 'airline_gui_mode', '') ==# 'gui' ? synIDattr(synIDtrans(hlID(a:group)), 'reverse', 'gui') : synIDattr(synIDtrans(hlID(a:group)), 'reverse', 'cterm')|| synIDattr(synIDtrans(hlID(a:group)), 'reverse', 'term')
+ 2014              0.007066   if get(g:, 'airline_highlighting_cache', 0) && has_key(s:hl_groups, a:group)
+                                let res = s:hl_groups[a:group]
+                                return reverse ? [ res[1], res[0], res[3], res[2], res[4] ] : res
+                              else
+ 2014   0.078074   0.011541     let fg = s:get_syn(a:group, 'fg')
+ 2014   0.074886   0.011776     let bg = s:get_syn(a:group, 'bg')
+ 2014              0.015497     let bold = synIDattr(synIDtrans(hlID(a:group)), 'bold')
+ 2014              0.001909     if reverse
+                                  let res = s:get_array(bg, fg, bold ? ['bold'] : a:000)
+                                else
+ 2014   0.028422   0.012237       let res = s:get_array(fg, bg, bold ? ['bold'] : a:000)
+ 2014              0.001088     endif
+ 2014              0.000758   endif
+ 2014              0.010584   let s:hl_groups[a:group] = res
+ 2014              0.001665   return res
+
+FUNCTION  <SNR>75_is_file_buffer()
+Called 3 times
+Total time:   0.000024
+ Self time:   0.000024
+
+count  total (s)   self (s)
+    3              0.000022   return empty(getbufvar(a:bufnr, '&buftype'))
+
+FUNCTION  airline#highlighter#highlight_modified_inactive()
+Called 10 times
+Total time:   0.004269
+ Self time:   0.000446
+
+count  total (s)   self (s)
+   10              0.000046   if getbufvar(a:bufnr, '&modified')
+   10              0.000122     let colors = exists('g:airline#themes#{g:airline_theme}#palette.inactive_modified.airline_c') ? g:airline#themes#{g:airline_theme}#palette.inactive_modified.airline_c : []
+   10              0.000007   else
+                                let colors = exists('g:airline#themes#{g:airline_theme}#palette.inactive.airline_c') ? g:airline#themes#{g:airline_theme}#palette.inactive.airline_c : []
+                              endif
+                            
+   10              0.000020   if !empty(colors)
+   10   0.003997   0.000175     call airline#highlighter#exec('airline_c'.(a:bufnr).'_inactive', colors)
+   10              0.000006   endif
+
+FUNCTION  <SNR>130_parse_args()
+Called 34 times
+Total time:   0.002093
+ Self time:   0.001240
+
+count  total (s)   self (s)
+                              "
+                              " The arguments should be in one of the following forms (when unpacked):
+                              "
+                              "   [lnum, cnum]
+                              "   [bufnum, lnum, cnum, ...]
+                              "   {'lnum' : lnum, 'cnum' : cnum}
+                              "
+                            
+   34              0.000121   if len(a:args) > 1
+   16              0.000114     return s:parse_args([a:args])
+                              elseif len(a:args) == 1
+   18              0.000155     if type(a:args[0]) == type({})
+                                  return [get(a:args[0], 'lnum'), get(a:args[0], 'cnum')]
+                                else
+   18              0.000061       if len(a:args[0]) == 2
+    2              0.000003         return a:args[0]
+                                  else
+   16              0.000073         return a:args[0][1:]
+                                  endif
+                                endif
+                              else
+                                return a:args
+                              endif
+
+FUNCTION  coc#rpc#notify()
+Called 18 times
+Total time:   0.003339
+ Self time:   0.000643
+
+count  total (s)   self (s)
+   18   0.000423   0.000183   if !coc#rpc#ready()
+                                return ''
+                              endif
+   18   0.002749   0.000294   call s:client['notify'](a:method, a:args)
+   18              0.000054   return ''
+
+FUNCTION  matchup#pos#get_cursor()
+Called 23 times
+Total time:   0.000186
+ Self time:   0.000186
+
+count  total (s)   self (s)
+   23              0.000162     return getcurpos()
+
+FUNCTION  ale#cursor#EchoCursorWarningWithDelay()
+Called 9 times
+Total time:   0.000933
+ Self time:   0.000695
+
+count  total (s)   self (s)
+    9              0.000053     let l:buffer = bufnr('')
+                            
+    9              0.000025     if !g:ale_echo_cursor && !g:ale_cursor_detail
+                                    return
+                                endif
+                            
+                                " Only echo the warnings in normal mode, otherwise we will get problems.
+    9              0.000033     if mode(1) isnot# 'n'
+                                    return
+                                endif
+                            
+    9   0.000208   0.000122     call s:StopCursorTimer()
+                            
+    9              0.000066     let l:pos = getcurpos()[0:2]
+                            
+                                " Check the current buffer, line, and column number against the last
+                                " recorded position. If the position has actually changed, *then*
+                                " we should echo something. Otherwise we can end up doing processing
+                                " the echo message far too frequently.
+    9              0.000050     if l:pos != s:last_pos
+    5   0.000277   0.000125         let l:delay = ale#Var(l:buffer, 'echo_delay')
+                            
+    5              0.000014         let s:last_pos = l:pos
+    5              0.000035         let s:cursor_timer = timer_start(   l:delay,   function('ale#cursor#EchoCursorWarning'))
+    5              0.000004     endif
+
+FUNCTION  <SNR>16_Autocmd()
+Called 18 times
+Total time:   0.003796
+ Self time:   0.000457
+
+count  total (s)   self (s)
+   18              0.000150   if !get(g:,'coc_workspace_initialized', 0) | return | endif
+   18   0.003622   0.000283   call coc#rpc#notify('CocAutocmd', a:000)
+
+FUNCTION  airline#extensions#vista#currenttag()
+Called 81 times
+Total time:   0.000480
+ Self time:   0.000480
+
+count  total (s)   self (s)
+   81              0.000215   if get(w:, 'airline_active', 0)
+   71              0.000185     return get(b:, 'vista_nearest_method_or_function', '')
+                              endif
+
+FUNCTION  gitgutter#process_buffer()
+Called 3 times
+Total time:   0.002639
+ Self time:   0.000410
+
+count  total (s)   self (s)
+                              " NOTE a:bufnr is not necessarily the current buffer.
+                            
+    3   0.002027   0.000078   if gitgutter#utility#is_active(a:bufnr)
+                            
+    3              0.000019     if has('patch-7.4.1559')
+    3              0.000030       let l:Callback = function('gitgutter#process_buffer', [a:bufnr, a:force])
+    3              0.000004     else
+                                  let l:Callback = {'function': 'gitgutter#process_buffer', 'arguments': [a:bufnr, a:force]}
+                                endif
+    3   0.000254   0.000054     let how = s:setup_path(a:bufnr, l:Callback)
+    3              0.000011     if [how] == ['async']  " avoid string-to-number conversion if how is a number
+                                  return
+                                endif
+                            
+    3   0.000159   0.000078     if a:force || s:has_fresh_changes(a:bufnr)
+                            
+                                  let diff = ''
+                                  try
+                                    let diff = gitgutter#diff#run_diff(a:bufnr, g:gitgutter_diff_relative_to, 0)
+                                  catch /gitgutter not tracked/
+                                    call gitgutter#debug#log('Not tracked: '.gitgutter#utility#file(a:bufnr))
+                                  catch /gitgutter diff failed/
+                                    call gitgutter#debug#log('Diff failed: '.gitgutter#utility#file(a:bufnr))
+                                    call gitgutter#hunk#reset(a:bufnr)
+                                  endtry
+                            
+                                  if diff != 'async'
+                                    call gitgutter#diff#handler(a:bufnr, diff)
+                                  endif
+                            
+                                endif
+    3              0.000002   endif
+
+FUNCTION  airline#parts#iminsert()
+Called 71 times
+Total time:   0.000400
+ Self time:   0.000400
+
+count  total (s)   self (s)
+   71              0.000158   if g:airline_detect_iminsert && &iminsert && exists('b:keymap_name')
+                                return toupper(b:keymap_name)
+                              endif
+   71              0.000045   return ''
+
+FUNCTION  <SNR>75_dir()
+Called 3 times
+Total time:   0.000741
+ Self time:   0.000121
+
+count  total (s)   self (s)
+    3   0.000739   0.000119   return gitgutter#utility#shellescape(fnamemodify(s:abs_path(a:bufnr, 0), ':h'))
+
+FUNCTION  airline#statusline()
+Called 81 times
+Total time:   0.001733
+ Self time:   0.001733
+
+count  total (s)   self (s)
+   81              0.000864   if has_key(s:contexts, a:winnr)
+   81              0.000689     return '%{airline#check_mode('.a:winnr.')}'.s:contexts[a:winnr].line
+                              endif
+                              " in rare circumstances this happens...see #276
+                              return ''
+
+FUNCTION  airline#util#append()
+Called 497 times
+Total time:   0.004449
+ Self time:   0.004449
+
+count  total (s)   self (s)
+  497              0.001009   if a:minwidth > 0 && airline#util#winwidth() < a:minwidth
+                                return ''
+                              endif
+  497              0.001394   let prefix = s:spc == "\ua0" ? s:spc : s:spc.s:spc
+  497              0.001218   return empty(a:text) ? '' : prefix.g:airline_left_alt_sep.s:spc.a:text
+
+FUNCTION  airline#themes#get_highlight()
+Called 1176 times
+Total time:   0.173644
+ Self time:   0.010452
+
+count  total (s)   self (s)
+ 1176   0.173251   0.010059   return call('airline#highlighter#get_highlight', [a:group] + a:000)
+
+FUNCTION  ale#highlight#RemoveHighlights()
+Called 2 times
+Total time:   0.000344
+ Self time:   0.000344
+
+count  total (s)   self (s)
+   44              0.000140     for l:match in getmatches()
+   42              0.000091         if l:match.group =~# '^ALE'
+                                        call matchdelete(l:match.id)
+                                    endif
+   42              0.000032     endfor
+
+FUNCTION  <SNR>121_setup_path()
+Called 3 times
+Total time:   0.000200
+ Self time:   0.000102
+
+count  total (s)   self (s)
+    3   0.000176   0.000078   let p = gitgutter#utility#repo_path(a:bufnr, 0)
+                            
+    3              0.000014   if type(p) == s:t_string && !empty(p)  " if path is known
+    3              0.000003     return
+                              endif
+                            
+                              return gitgutter#utility#set_repo_path(a:bufnr, a:continuation)
+
+FUNCTION  matchup#perf#timeout()
+Called 8 times
+Total time:   0.000061
+ Self time:   0.000061
+
+count  total (s)   self (s)
+    8              0.000056   return float2nr(s:timeout)
+
+FUNCTION  <SNR>121_has_fresh_changes()
+Called 3 times
+Total time:   0.000081
+ Self time:   0.000032
+
+count  total (s)   self (s)
+    3   0.000079   0.000030   return getbufvar(a:bufnr, 'changedtick') != gitgutter#utility#getbufvar(a:bufnr, 'tick')
+
+FUNCTION  <SNR>75_abs_path()
+Called 6 times
+Total time:   0.000733
+ Self time:   0.000733
+
+count  total (s)   self (s)
+    6              0.000692   let p = resolve(expand('#'.a:bufnr.':p'))
+    6              0.000035   return a:shellesc ? gitgutter#utility#shellescape(p) : p
+
+FUNCTION  airline#extensions#coc#get()
+Called 142 times
+Total time:   0.005297
+ Self time:   0.005297
+
+count  total (s)   self (s)
+  142              0.000401   if !exists(":CocCommand")
+                                return ''
+                              endif
+  142              0.000432   let _backup = get(g:, 'coc_stl_format', '')
+  142              0.000294   let is_err = (a:type  is# 'error')
+  142              0.000109   if is_err
+   71              0.000344     let g:coc_stl_format = get(g:, 'airline#extensions#coc#stl_format_err', '%E{[%e(#%fe)]}')
+   71              0.000038   else
+   71              0.000381     let g:coc_stl_format = get(g:, 'airline#extensions#coc#stl_format_warn', '%W{[%w(#%fw)]}')
+   71              0.000038   endif
+  142              0.000378   let info = get(b:, 'coc_diagnostic_info', {})
+  142              0.000373   if empty(info) | return '' | endif
+                            
+                            
+  142              0.000337   let cnt = get(info, a:type, 0)
+  142              0.000249   if !empty(_backup)
+  142              0.000400     let g:coc_stl_format = _backup
+  142              0.000066   endif
+                            
+  142              0.000179   if empty(cnt)
+   71              0.000047     return ''
+                              else
+   71              0.000201     return (is_err ? s:error_symbol : s:warning_symbol).cnt
+                              endif
+
+FUNCTION  <SNR>169_CreateCountDict()
+Called 142 times
+Total time:   0.001049
+ Self time:   0.001049
+
+count  total (s)   self (s)
+                                " Keys 0 and 1 are for backwards compatibility.
+                                " The count object used to be a List of [error_count, warning_count].
+  142              0.000814     return {   '0': 0,   '1': 0,   'error': 0,   'warning': 0,   'info': 0,   'style_error': 0,   'style_warning': 0,   'total': 0,}
+
+FUNCTION  airline#extensions#tabline#buflist#list()
+Called 108 times
+Total time:   0.000734
+ Self time:   0.000734
+
+count  total (s)   self (s)
+  108              0.000428   if exists('s:current_buffer_list')
+  108              0.000178     return s:current_buffer_list
+                              endif
+                            
+                              let exclude_buffers = get(g:, 'airline#extensions#tabline#exclude_buffers', [])
+                              let exclude_paths = get(g:, 'airline#extensions#tabline#excludes', [])
+                              let exclude_preview = get(g:, 'airline#extensions#tabline#exclude_preview', 1)
+                            
+                              let list = (exists('g:did_bufmru') && g:did_bufmru) ? BufMRUList() : range(1, bufnr("$"))
+                            
+                              let buffers = []
+                              " If this is too slow, we can switch to a different algorithm.
+                              " Basically branch 535 already does it, but since it relies on
+                              " BufAdd autocommand, I'd like to avoid this if possible.
+                              for nr in list
+                                if buflisted(nr)
+                                  " Do not add to the bufferlist, if either
+                                  " 1) bufnr is exclude_buffers list
+                                  " 2) buffername matches one of exclude_paths patterns
+                                  " 3) buffer is a quickfix buffer
+                                  " 4) when excluding preview windows:
+                                  "     'bufhidden' == wipe
+                                  "     'buftype' == nofile
+                                  " 5) ignore buffers matching airline#extensions#tabline#ignore_bufadd_pat
+                            
+                                  " check buffer numbers first
+                                  if index(exclude_buffers, nr) >= 0
+                                    continue
+                                  " check paths second
+                                  elseif !empty(exclude_paths) && s:ExcludePaths(nr, exclude_paths)
+                                    continue
+                                  " ignore buffers matching airline#extensions#tabline#ignore_bufadd_pat
+                                  elseif airline#util#ignore_buf(bufname(nr))
+                                    continue
+                                  " check other types last
+                                  elseif s:ExcludeOther(nr, exclude_preview)
+                                    continue
+                                  endif
+                            
+                                  call add(buffers, nr)
+                                endif
+                              endfor
+                            
+                              let s:current_buffer_list = buffers
+                              return buffers
+
+FUNCTION  ale#ShouldDoNothing()
+Called 7 times
+Total time:   0.001530
+ Self time:   0.000973
+
+count  total (s)   self (s)
+                                " The checks are split into separate if statements to make it possible to
+                                " profile each check individually with Vim's profiling tools.
+                                "
+                                " Do nothing if ALE is disabled.
+    7              0.000060     if !getbufvar(a:buffer, 'ale_enabled', get(g:, 'ale_enabled', 0))
+                                    return 1
+                                endif
+                            
+                                " Don't perform any checks when newer NeoVim versions are exiting.
+    7              0.000041     if get(v:, 'exiting', v:null) isnot v:null
+                                    return 1
+                                endif
+                            
+    7              0.000044     let l:filetype = getbufvar(a:buffer, '&filetype')
+                            
+                                " Do nothing when there's no filetype.
+    7              0.000017     if l:filetype is# ''
+                                    return 1
+                                endif
+                            
+                                " Do nothing for blacklisted files.
+    7              0.000061     if index(get(g:, 'ale_filetype_blacklist', []), l:filetype) >= 0
+                                    return 1
+                                endif
+                            
+                                " Do nothing if running from command mode.
+    7              0.000061     if s:getcmdwintype_exists && !empty(getcmdwintype())
+                                    return 1
+                                endif
+                            
+    7              0.000040     let l:filename = fnamemodify(bufname(a:buffer), ':t')
+                            
+                                " Do nothing for directories.
+    7              0.000013     if l:filename is# '.'
+                                    return 1
+                                endif
+                            
+                                " Don't start linting and so on when an operator is pending.
+    7   0.000121   0.000084     if ale#util#Mode(1) is# 'no'
+                                    return 1
+                                endif
+                            
+                                " Do nothing if running in the sandbox.
+    7   0.000506   0.000097     if ale#util#InSandbox()
+                                    return 1
+                                endif
+                            
+                                " Do nothing if the file is too large.
+    7   0.000213   0.000102     if ale#FileTooLarge(a:buffer)
+                                    return 1
+                                endif
+                            
+                                " Do nothing from CtrlP buffers with CtrlP-funky.
+    7              0.000092     if exists(':CtrlPFunky') is 2&& getbufvar(a:buffer, '&l:statusline') =~# 'CtrlPMode.*funky'
+                                    return 1
+                                endif
+                            
+    7              0.000014     return 0
+
+FUNCTION  WindowSwap#IsWindowMarked()
+Called 81 times
+Total time:   0.001130
+ Self time:   0.000823
+
+count  total (s)   self (s)
+   81   0.000850   0.000543   if WindowSwap#HasMarkedWindow() && s:markedWinNum[0] == a:tab && s:markedWinNum[1] == a:win
+                                  return 1
+                               else
+   81              0.000051       return 0
+                               endif
+
+FUNCTION  airline#extensions#tabline#formatters#webdevicons#format()
+Called 108 times
+Total time:   0.072347
+ Self time:   0.003378
+
+count  total (s)   self (s)
+                              " Call original formatter.
+  108   0.027307   0.001890   let originalFormatter = airline#extensions#tabline#formatters#{g:_webdevicons_airline_orig_formatter}#format(a:bufnr, a:buffers)
+  108   0.044868   0.001316   return originalFormatter . ' ' . WebDevIconsGetFileTypeSymbol(bufname(a:bufnr))
+
+FUNCTION  airline#util#ignore_buf()
+Called 81 times
+Total time:   0.005507
+ Self time:   0.005507
+
+count  total (s)   self (s)
+   81              0.000646   let pat = '\c\v'. get(g:, 'airline#ignore_bufadd_pat', ''). get(g:, 'airline#extensions#tabline#ignore_bufadd_pat',  '!|defx|gundo|nerd_tree|startify|tagbar|term://|undotree|vimfiler')
+   81              0.004779   return match(a:name, pat) > -1
+
+FUNCTION  airline#util#winwidth()
+Called 223 times
+Total time:   0.002220
+ Self time:   0.002220
+
+count  total (s)   self (s)
+  223              0.000654   let nr = get(a:000, 0, 0)
+  223              0.000578   if get(g:, 'airline_statusline_ontop', 0)
+                                return &columns
+                              else
+  223              0.000444     return winwidth(nr)
+                              endif
+
+FUNCTION  SimpylFold#Recache()
+Called 2 times
+Total time:   0.000036
+ Self time:   0.000036
+
+count  total (s)   self (s)
+    2              0.000010     if exists('b:SimpylFold_cache')
+                                    unlet b:SimpylFold_cache
+                                endif
+
+FUNCTION  ale#cursor#EchoCursorWarning()
+Called 7 times
+Total time:   0.002965
+ Self time:   0.000980
+
+count  total (s)   self (s)
+    7              0.000052     let l:buffer = bufnr('')
+                            
+    7              0.000025     if !g:ale_echo_cursor && !g:ale_cursor_detail
+                                    return
+                                endif
+                            
+                                " Only echo the warnings in normal mode, otherwise we will get problems.
+    7              0.000034     if mode(1) isnot# 'n'
+                                    return
+                                endif
+                            
+    7   0.001695   0.000165     if ale#ShouldDoNothing(l:buffer)
+                                    return
+                                endif
+                            
+    7   0.000633   0.000179     let [l:info, l:loc] = ale#util#FindItemAtCursor(l:buffer)
+                            
+    7              0.000010     if g:ale_echo_cursor
+    7              0.000023         if !empty(l:loc)
+                                        let l:format = ale#Var(l:buffer, 'echo_msg_format')
+                                        let l:msg = ale#GetLocItemMessage(l:loc, l:format)
+                                        call ale#cursor#TruncatedEcho(l:msg)
+                                        let l:info.echoed = 1
+                                    elseif get(l:info, 'echoed')
+                                        " We'll only clear the echoed message when moving off errors once,
+                                        " so we don't continually clear the echo line.
+                                        execute 'echo'
+                                        let l:info.echoed = 0
+                                    endif
+    7              0.000004     endif
+                            
+    7              0.000015     if g:ale_cursor_detail
+                                    if !empty(l:loc)
+                                        call s:ShowCursorDetailForItem(l:loc, {'stay_here': 1})
+                                    else
+                                        call ale#preview#CloseIfTypeMatches('ale-preview')
+                                    endif
+                                endif
+
+FUNCTION  airline#extensions#tabline#get_buffer_name()
+Called 108 times
+Total time:   0.075257
+ Self time:   0.002619
+
+count  total (s)   self (s)
+  108   0.000982   0.000691   let buffers = a:0 ? a:1 : airline#extensions#tabline#buflist#list()
+  108              0.000535   let formatter = get(g:, 'airline#extensions#tabline#formatter', 'default')
+  108   0.073637   0.001290   return airline#extensions#tabline#formatters#{formatter}#format(a:nr, buffers)
+
+FUNCTION  54()
+Called 4 times
+Total time:   0.000019
+ Self time:   0.000019
+
+count  total (s)   self (s)
+    4              0.000016   return empty(self.v)
+
+FUNCTION  55()
+Called 2 times
+Total time:   0.000016
+ Self time:   0.000016
+
+count  total (s)   self (s)
+    2              0.000013   return len(self.v)
+
+FUNCTION  ale#FileTooLarge()
+Called 7 times
+Total time:   0.000111
+ Self time:   0.000111
+
+count  total (s)   self (s)
+    7              0.000068     let l:max = getbufvar(a:buffer, 'ale_maximum_file_size', get(g:, 'ale_maximum_file_size', 0))
+                            
+    7              0.000031     return l:max > 0 ? (line2byte(line('$') + 1) > l:max) : 0
+
+FUNCTION  WindowSwap#IsCurrentWindowMarked()
+Called 81 times
+Total time:   0.001845
+ Self time:   0.000715
+
+count  total (s)   self (s)
+   81   0.001790   0.000660    return WindowSwap#IsWindowMarked(tabpagenr(),winnr())
+
+FUNCTION  airline#util#wrap()
+Called 750 times
+Total time:   0.003810
+ Self time:   0.003810
+
+count  total (s)   self (s)
+  750              0.001823   if a:minwidth > 0 && airline#util#winwidth() < a:minwidth
+                                return ''
+                              endif
+  750              0.000711   return a:text
+
+FUNCTION  airline#extensions#keymap#status()
+Called 71 times
+Total time:   0.000837
+ Self time:   0.000837
+
+count  total (s)   self (s)
+   71              0.000410   if (get(g:, 'airline#extensions#keymap#enabled', 1) && has('keymap'))
+   71              0.000367     return printf('%s', (!empty(&keymap) ? (g:airline_symbols.keymap . ' '. &keymap) : ''))
+                              else
+                                return ''
+                              endif
+
+FUNCTION  ale#statusline#Count()
+Called 142 times
+Total time:   0.005006
+ Self time:   0.001433
+
+count  total (s)   self (s)
+                                " The Dictionary is copied here before exposing it to other plugins.
+  142   0.004860   0.001286     return copy(s:GetCounts(a:buffer))
+
+FUNCTION  <SNR>19_get_channel()
+Called 18 times
+Total time:   0.000154
+ Self time:   0.000154
+
+count  total (s)   self (s)
+   18              0.000032   if s:is_vim
+                                return a:client['channel']
+                              endif
+   18              0.000043   return a:client['chan_id']
+
+FUNCTION  <SNR>102_GetHiCmd()
+Called 75 times
+Total time:   0.006716
+ Self time:   0.006716
+
+count  total (s)   self (s)
+                              " a:list needs to have 5 items!
+   75              0.000093   let res = ''
+   75              0.000080   let i = -1
+  450              0.000383   while i < 4
+  375              0.000340     let i += 1
+  375              0.000906     let item = get(a:list, i, '')
+  375              0.000453     if item is ''
+  174              0.000269       continue
+                                endif
+  201              0.000178     if i == 0
+   75              0.000196       let res .= ' guifg='.item
+   75              0.000061     elseif i == 1
+   44              0.000088       let res .= ' guibg='.item
+   44              0.000025     elseif i == 2
+   39              0.000123       let res .= ' ctermfg='.item
+   39              0.000026     elseif i == 3
+   24              0.000049       let res .= ' ctermbg='.item
+   24              0.000014     elseif i == 4
+   19              0.000083       let res .= printf(' gui=%s cterm=%s term=%s', item, item, item)
+   19              0.000010     endif
+  201              0.000248   endwhile
+   75              0.000084   return res
+
+FUNCTION  airline#highlighter#highlight()
+Called 10 times
+Total time:   0.442512
+ Self time:   0.059061
+
+count  total (s)   self (s)
+   10              0.000026   let bufnr = a:0 ? a:1 : ''
+   10              0.000043   let p = g:airline#themes#{g:airline_theme}#palette
+                            
+                              " draw the base mode, followed by any overrides
+   10              0.000126   let mapped = map(a:modes, 'v:val == a:modes[0] ? v:val : a:modes[0]."_".v:val')
+   10              0.000026   let suffix = a:modes[0] == 'inactive' ? '_inactive' : ''
+   10              0.000018   let airline_grouplist = []
+   10              0.000084   let buffers_in_tabpage = sort(tabpagebuflist())
+   10              0.000028   if exists("*uniq")
+   10              0.000042     let buffers_in_tabpage = uniq(buffers_in_tabpage)
+   10              0.000005   endif
+                              " mapped might be something like ['normal', 'normal_modified']
+                              " if a group is in both modes available, only define the second
+                              " that is how this was done previously overwrite the previous definition
+   30              0.000064   for mode in reverse(mapped)
+   20              0.000146     if exists('g:airline#themes#{g:airline_theme}#palette[mode]')
+   14              0.000047       let dict = g:airline#themes#{g:airline_theme}#palette[mode]
+  693              0.001542       for kvp in items(dict)
+  679              0.000937         let mode_colors = kvp[1]
+  679              0.000823         let name = kvp[0]
+  679              0.001482         if name is# 'airline_c' && !empty(bufnr) && suffix is# '_inactive'
+                                      let name = 'airline_c'.bufnr
+                                    endif
+                                    " do not re-create highlighting for buffers that are no longer visible
+                                    " in the current tabpage
+  679              0.015691         if name =~# 'airline_c\d\+'
+  140              0.002905           let bnr = matchstr(name, 'airline_c\zs\d\+') + 0
+  140              0.000406           if bnr > 0 && index(buffers_in_tabpage, bnr) == -1
+  106              0.000136             continue
+                                      endif
+   34              0.000071         elseif (name =~# '_to_') || (name[0:10] is# 'airline_tab' && !empty(suffix))
+                                      " group will be redefined below at exec_separator
+                                      " or is not needed for tabline with '_inactive' suffix
+                                      " since active flag is 1 for builder)
+  448              0.000508           continue
+                                    endif
+  125   0.002144   0.001022         if s:group_not_done(airline_grouplist, name.suffix)
+   80   0.020148   0.000717           call airline#highlighter#exec(name.suffix, mode_colors)
+   80              0.000049         endif
+                            
+  375              0.000789         for accent in keys(s:accents)
+  250              0.000592           if !has_key(p.accents, accent)
+                                        continue
+                                      endif
+  250              0.001114           let colors = copy(mode_colors)
+  250              0.000547           if p.accents[accent][0] != ''
+  125              0.000264             let colors[0] = p.accents[accent][0]
+  125              0.000062           endif
+  250              0.000425           if p.accents[accent][2] != ''
+  125              0.000222             let colors[2] = p.accents[accent][2]
+  125              0.000053           endif
+  250              0.000373           if len(colors) >= 5
+  250              0.000719             let colors[4] = get(p.accents[accent], 4, '')
+  250              0.000137           else
+                                        call add(colors, get(p.accents[accent], 4, ''))
+                                      endif
+  250   0.003649   0.001755           if s:group_not_done(airline_grouplist, name.suffix.'_'.accent)
+  160   0.039184   0.001344             call airline#highlighter#exec(name.suffix.'_'.accent, colors)
+  160              0.000097           endif
+  250              0.000272         endfor
+  125              0.000177       endfor
+                            
+   14              0.000027       if empty(s:separators)
+                                    " nothing to be done
+                                    continue
+                                  endif
+                                  " TODO: optimize this
+  602              0.001756       for sep in items(s:separators)
+                                    " we cannot check, that the group already exists, else the separators
+                                    " might not be correctly defined. But perhaps we can skip above groups
+                                    " that match the '_to_' name, because they would be redefined here...
+  588   0.328889   0.005725         call <sid>exec_separator(dict, sep[1][0], sep[1][1], sep[1][2], suffix)
+  588              0.000784       endfor
+   14              0.000008     endif
+   20              0.000038   endfor
+
+FUNCTION  coc#rpc#ready()
+Called 18 times
+Total time:   0.000241
+ Self time:   0.000241
+
+count  total (s)   self (s)
+   18              0.000132   if empty(s:client) || s:client['running'] == 0
+                                return 0
+                              endif
+   18              0.000037   return 1
+
+FUNCTION  airline#parts#ffenc()
+Called 81 times
+Total time:   0.001961
+ Self time:   0.001961
+
+count  total (s)   self (s)
+   81              0.000319   let expected = get(g:, 'airline#parts#ffenc#skip_expected_string', '')
+   81              0.000169   let bomb     = &l:bomb ? '[BOM]' : ''
+   81              0.000616   let ff       = strlen(&ff) ? '['.&ff.']' : ''
+   81              0.000349   if expected is# &fenc.bomb.ff
+                                return ''
+                              else
+   81              0.000243     return &fenc.bomb.ff
+                              endif
+
+FUNCTION  gitgutter#utility#shellescape()
+Called 3 times
+Total time:   0.000317
+ Self time:   0.000317
+
+count  total (s)   self (s)
+    3              0.000305   if a:arg =~ '^[A-Za-z0-9_/.-]\+$'
+    3              0.000008     return a:arg
+                              elseif s:winshell()
+                                return '"' . substitute(substitute(a:arg, '"', '""', 'g'), '%', '"%"', 'g') . '"'
+                              else
+                                return shellescape(a:arg)
+                              endif
+
+FUNCTION  airline#parts#readonly()
+Called 81 times
+Total time:   0.007288
+ Self time:   0.001781
+
+count  total (s)   self (s)
+                              " only consider regular buffers (e.g. ones that represent actual files,
+                              " but not special ones like e.g. NERDTree)
+   81   0.006337   0.000830   if !empty(&buftype) || airline#util#ignore_buf(bufname('%'))
+                                return ''
+                              endif
+   81              0.000285   if &readonly && !filereadable(bufname('%'))
+                                return '[noperm]'
+                              else
+   81              0.000158     return &readonly ? g:airline_symbols.readonly : ''
+                              endif
+
+FUNCTION  lexima#string#to_inputtable()
+Called 2 times
+Total time:   0.000057
+ Self time:   0.000057
+
+count  total (s)   self (s)
+    2              0.000055   return substitute(a:str, '<\([A-Za-z\-\]\[]\+\)>', '\=eval(''"\<'' . submatch(1) . ''>"'')', 'g')
+
+FUNCTION  airline#update_tabline()
+Called 16 times
+Total time:   0.000179
+ Self time:   0.000179
+
+count  total (s)   self (s)
+   16              0.000105   if get(g:, 'airline_statusline_ontop', 0)
+                                call airline#extensions#tabline#redraw()
+                              endif
+
+FUNCTION  <SNR>169_BufferCacheExists()
+Called 142 times
+Total time:   0.000904
+ Self time:   0.000904
+
+count  total (s)   self (s)
+  142              0.000687     if !exists('g:ale_buffer_info') || !has_key(g:ale_buffer_info, a:buffer)
+  142              0.000122         return 0
+                                endif
+                            
+                                return 1
+
+FUNCTION  ale#util#BinarySearch()
+Called 7 times
+Total time:   0.000101
+ Self time:   0.000101
+
+count  total (s)   self (s)
+    7              0.000017     let l:min = 0
+    7              0.000020     let l:max = len(a:loclist) - 1
+                            
+    7              0.000012     while 1
+    7              0.000021         if l:max < l:min
+    7              0.000014             return -1
+                                    endif
+                            
+                                    let l:mid = (l:min + l:max) / 2
+                                    let l:item = a:loclist[l:mid]
+                            
+                                    " Binary search for equal buffers, equal lines, then near columns.
+                                    if l:item.bufnr < a:buffer
+                                        let l:min = l:mid + 1
+                                    elseif l:item.bufnr > a:buffer
+                                        let l:max = l:mid - 1
+                                    elseif l:item.lnum < a:line
+                                        let l:min = l:mid + 1
+                                    elseif l:item.lnum > a:line
+                                        let l:max = l:mid - 1
+                                    else
+                                        " This part is a small sequential search.
+                                        let l:index = l:mid
+                            
+                                        " Search backwards to find the first problem on the line.
+                                        while l:index > 0&& a:loclist[l:index - 1].bufnr == a:buffer&& a:loclist[l:index - 1].lnum == a:line
+                                            let l:index -= 1
+                                        endwhile
+                            
+                                        " Find the last problem on or before this column.
+                                        while l:index < l:max&& a:loclist[l:index + 1].bufnr == a:buffer&& a:loclist[l:index + 1].lnum == a:line&& a:loclist[l:index + 1].col <= a:column
+                                            let l:index += 1
+                                        endwhile
+                            
+                                        " Scan forwards to find the last item on the column for the item
+                                        " we found, which will have the most serious problem.
+                                        let l:item_column = a:loclist[l:index].col
+                            
+                                        while l:index < l:max&& a:loclist[l:index + 1].bufnr == a:buffer&& a:loclist[l:index + 1].lnum == a:line&& a:loclist[l:index + 1].col == l:item_column
+                                            let l:index += 1
+                                        endwhile
+                            
+                                        return l:index
+                                    endif
+                                endwhile
+
+FUNCTION  <SNR>106_ale_refresh()
+Called 3 times
+Total time:   0.000026
+ Self time:   0.000026
+
+count  total (s)   self (s)
+    3              0.000015   if get(g:, 'airline_skip_empty_sections', 0)
+                                exe ':AirlineRefresh!'
+                              endif
+
+FUNCTION  lexima#insmode#leave_all()
+Called 2 times
+Total time:   0.000395
+ Self time:   0.000143
+
+count  total (s)   self (s)
+    2   0.000393   0.000141   return lexima#insmode#leave(s:input_stack.count(), a:fallback)
+
+FUNCTION  <SNR>29_DevIconsGetArtifactFix()
+Called 108 times
+Total time:   0.001039
+ Self time:   0.001039
+
+count  total (s)   self (s)
+  108              0.000221   if g:DevIconsAppendArtifactFix == 1
+                                let artifactFix = g:DevIconsArtifactFixChar
+                              else
+  108              0.000188     let artifactFix = ''
+  108              0.000079   endif
+                            
+  108              0.000147   return artifactFix
+
+FUNCTION  gitgutter#utility#getbufvar()
+Called 9 times
+Total time:   0.000193
+ Self time:   0.000193
+
+count  total (s)   self (s)
+    9              0.000044   let bvars = getbufvar(a:buffer, '')
+    9              0.000024   if !empty(bvars)
+    9              0.000045     let dict = get(bvars, 'gitgutter', {})
+    9              0.000032     if has_key(dict, a:varname)
+    6              0.000015       return dict[a:varname]
+                                endif
+    3              0.000002   endif
+    3              0.000003   if a:0
+    3              0.000004     return a:1
+                              endif
+
+FUNCTION  gitgutter#utility#repo_path()
+Called 3 times
+Total time:   0.000098
+ Self time:   0.000037
+
+count  total (s)   self (s)
+    3   0.000085   0.000024   let p = gitgutter#utility#getbufvar(a:bufnr, 'path')
+    3              0.000011   return a:shellesc ? gitgutter#utility#shellescape(p) : p
+
+FUNCTION  matchup#perf#timeout_start()
+Called 8 times
+Total time:   0.000342
+ Self time:   0.000342
+
+count  total (s)   self (s)
+    8              0.000104   let s:timeout = a:timeout
+    8              0.000109   let s:timeout_enabled = (a:timeout == 0) ? 0 : 1
+    8              0.000087   let s:timeout_pulse_time = reltime()
+
+FUNCTION  coc#util#win_position()
+Called 4 times
+Total time:   0.000059
+ Self time:   0.000059
+
+count  total (s)   self (s)
+    4              0.000020   let nr = winnr()
+    4              0.000018   let [row, col] = win_screenpos(nr)
+    4              0.000017   return [row + winline() - 2, col + wincol() - 2]
+
+FUNCTION  ale#util#FindItemAtCursor()
+Called 7 times
+Total time:   0.000455
+ Self time:   0.000354
+
+count  total (s)   self (s)
+    7              0.000048     let l:info = get(g:ale_buffer_info, a:buffer, {})
+    7              0.000032     let l:loclist = get(l:info, 'loclist', [])
+    7              0.000032     let l:pos = getcurpos()
+    7   0.000256   0.000156     let l:index = ale#util#BinarySearch(l:loclist, a:buffer, l:pos[1], l:pos[2])
+    7              0.000034     let l:loc = l:index >= 0 ? l:loclist[l:index] : {}
+                            
+    7              0.000021     return [l:info, l:loc]
+
+FUNCTION  <SNR>106_airline_ale_count()
+Called 142 times
+Total time:   0.000291
+ Self time:   0.000291
+
+count  total (s)   self (s)
+  142              0.000238   return a:cnt ? a:symbol. a:cnt : ''
+
+FUNCTION  matchup#perf#toc()
+Called 24 times
+Total time:   0.001716
+ Self time:   0.001594
+
+count  total (s)   self (s)
+   24   0.000661   0.000540   let l:elapsed = s:reltimefloat(reltime(s:time_start[a:context]))
+                            
+   24              0.000154   let l:key = a:context.'#'.a:state
+   24              0.000123   if has_key(g:matchup#perf#times, l:key)
+   24              0.000109     if l:elapsed > g:matchup#perf#times[l:key].maximum
+                                  let g:matchup#perf#times[l:key].maximum = l:elapsed
+                                endif
+   24              0.000100     let g:matchup#perf#times[l:key].last = l:elapsed
+   24              0.000199     let g:matchup#perf#times[l:key].emavg = s:alpha*l:elapsed + (1-s:alpha)*g:matchup#perf#times[l:key].emavg
+   24              0.000035   else
+                                let g:matchup#perf#times[l:key] = { 'maximum' : l:elapsed, 'emavg'   : l:elapsed, 'last'    : l:elapsed,}
+                              endif
+
+FUNCTION  ale#util#InSandbox()
+Called 7 times
+Total time:   0.000409
+ Self time:   0.000111
+
+count  total (s)   self (s)
+    7              0.000008     try
+    7   0.000354   0.000056         let &l:equalprg=&l:equalprg
+    7              0.000010     catch /E48/
+                                    " E48 is the sandbox error.
+                                    return 1
+                                endtry
+                            
+    7              0.000006     return 0
+
+FUNCTION  airline#parts#crypt()
+Called 71 times
+Total time:   0.000601
+ Self time:   0.000601
+
+count  total (s)   self (s)
+   71              0.000569   return g:airline_detect_crypt && exists("+key") && !empty(&key) ? g:airline_symbols.crypt : ''
+
+FUNCTION  airline#extensions#tabline#formatters#default#wrap_name()
+Called 378 times
+Total time:   0.006544
+ Self time:   0.006544
+
+count  total (s)   self (s)
+  378              0.001165   let _ = s:buf_nr_show ? printf(s:buf_nr_format, a:bufnr) : ''
+  378              0.002468   let _ .= substitute(a:buffer_name, '\\', '/', 'g')
+                            
+  378              0.001252   if getbufvar(a:bufnr, '&modified') == 1
+   54              0.000113     let _ .= s:buf_modified_symbol
+   54              0.000041   endif
+  378              0.000391   return _
+
+FUNCTION  airline#util#prepend()
+Called 324 times
+Total time:   0.001875
+ Self time:   0.001875
+
+count  total (s)   self (s)
+  324              0.000633   if a:minwidth > 0 && airline#util#winwidth() < a:minwidth
+                                return ''
+                              endif
+  324              0.000755   return empty(a:text) ? '' : a:text.s:spc.g:airline_right_alt_sep.s:spc
+
+FUNCTION  <SNR>66_setup_insmode()
+Called 2 times
+Total time:   0.000188
+ Self time:   0.000188
+
+count  total (s)   self (s)
+    2              0.000010   if get(b:, 'lexima_disabled', 0)
+                                return
+                              endif
+                            
+    2              0.000007   if v:version > 703 || (v:version == 703 && has("patch1261"))
+    2              0.000156     exe 'inoremap <buffer> <silent> <nowait> '.g:lexima_map_escape.' <C-r>=lexima#insmode#escape()<CR><Esc>'
+    2              0.000002   else
+                                exe 'inoremap <buffer> <silent> '.g:lexima_map_escape.' <C-r>=lexima#insmode#escape()<CR><Esc>'
+                              endif
+
+FUNCTION  <SNR>75_exists_file()
+Called 3 times
+Total time:   0.000579
+ Self time:   0.000149
+
+count  total (s)   self (s)
+    3   0.000577   0.000147   return filereadable(s:abs_path(a:bufnr, 0))
+
+FUNCTION  <SNR>102_get_syn()
+Called 4028 times
+Total time:   0.129643
+ Self time:   0.129643
+
+count  total (s)   self (s)
+ 4028              0.009903   if !exists("g:airline_gui_mode")
+                                let g:airline_gui_mode = airline#init#gui_mode()
+                              endif
+ 4028              0.003937   let color = ''
+ 4028              0.024698   if hlexists(a:group)
+ 3748              0.031179     let color = synIDattr(synIDtrans(hlID(a:group)), a:what, g:airline_gui_mode)
+ 3748              0.001952   endif
+ 4028              0.007948   if empty(color) || color == -1
+                                " should always exists
+  322              0.003999     let color = synIDattr(synIDtrans(hlID('Normal')), a:what, g:airline_gui_mode)
+                                " however, just in case
+  322              0.000686     if empty(color) || color == -1
+                                  let color = 'NONE'
+                                endif
+  322              0.000162   endif
+ 4028              0.003156   return color
+
+FUNCTION  lexima#insmode#escape()
+Called 2 times
+Total time:   0.000650
+ Self time:   0.000254
+
+count  total (s)   self (s)
+    2              0.000042   let pos_save = getpos('.')
+    2              0.000006   try
+    2   0.000519   0.000123     let ret = lexima#insmode#leave_all('')
+    2              0.000044     let ret .= "\<C-r>=setpos('.', " . string(pos_save) . ")?'':''\<CR>"
+    2              0.000005   catch
+                                call setpos('.', pos_save)
+                                let ret = ''
+                              endtry
+    2              0.000007   return ret
+
+FUNCTION  <SNR>29_CursorHoldUpdate()
+Called 3 times
+Total time:   0.000042
+ Self time:   0.000042
+
+count  total (s)   self (s)
+    3              0.000010   if g:NERDTreeUpdateOnCursorHold != 1
+                                return
+                              endif
+                            
+    3              0.000015   if !exists('g:NERDTree') || !g:NERDTree.IsOpen()
+    3              0.000003     return
+                              endif
+                            
+                              " Do not update when a special buffer is selected
+                              if !empty(&l:buftype)
+                                return
+                              endif
+                            
+                              " winnr need to make focus go to opened file
+                              " CursorToTreeWin needed to avoid error on opening file
+                              let l:winnr = winnr()
+                              let l:altwinnr = winnr('#')
+                            
+                              call g:NERDTree.CursorToTreeWin()
+                              call b:NERDTree.root.refreshFlags()
+                              call NERDTreeRender()
+                            
+                              exec l:altwinnr . 'wincmd w'
+                              exec l:winnr . 'wincmd w'
+
+FUNCTION  <SNR>102_group_not_done()
+Called 375 times
+Total time:   0.003016
+ Self time:   0.003016
+
+count  total (s)   self (s)
+  375              0.001029   if index(a:list, a:name) == -1
+  240              0.000644     call add(a:list, a:name)
+  240              0.000192     return 1
+                              else
+  135              0.000136     if &vbs
+                                  echomsg printf("airline: group: %s already done, skipping", a:name)
+                                endif
+  135              0.000082     return 0
+                              endif
+
+FUNCTION  <SNR>106_airline_ale_get_line_number()
+Called 142 times
+Total time:   0.002533
+ Self time:   0.001766
+
+count  total (s)   self (s)
+                              " Use the new ALE statusline API function if it is available.
+  142              0.000492   if exists("*ale#statusline#FirstProblem")
+  142   0.001875   0.001108     return s:new_airline_ale_get_line_number(a:cnt, a:type)
+                              endif
+                            
+                              return s:legacy_airline_ale_get_line_number(a:cnt, a:type)
+
+FUNCTION  matchup#perf#tic()
+Called 16 times
+Total time:   0.000225
+ Self time:   0.000225
+
+count  total (s)   self (s)
+   16              0.000214   let s:time_start[a:context] = reltime()
+
+FUNCTION  airline#extensions#ale#get_warning()
+Called 71 times
+Total time:   0.011428
+ Self time:   0.000963
+
+count  total (s)   self (s)
+   71   0.011360   0.000894   return airline#extensions#ale#get('warning')
+
+FUNCTION  matchup#delim#get_current()
+Called 8 times
+Total time:   0.011199
+ Self time:   0.000605
+
+count  total (s)   self (s)
+    8   0.011178   0.000584   return s:get_delim(extend({ 'direction' : 'current', 'type' : a:type, 'side' : a:side,}, get(a:, '1', {})))
+
+FUNCTION  <SNR>102_CheckDefined()
+Called 838 times
+Total time:   0.018794
+ Self time:   0.018794
+
+count  total (s)   self (s)
+                              " Checks, whether the definition of the colors is valid and is not empty or NONE
+                              " e.g. if the colors would expand to this:
+                              " hi airline_c ctermfg=NONE ctermbg=NONE
+                              " that means to clear that highlighting group, therefore, fallback to Normal
+                              " highlighting group for the cterm values
+                            
+                              " This only works, if the Normal highlighting group is actually defined, so
+                              " return early, if it has been cleared
+  838              0.002570   if !exists("g:airline#highlighter#normal_fg_hi")
+                                let g:airline#highlighter#normal_fg_hi = synIDattr(synIDtrans(hlID('Normal')), 'fg', 'cterm')
+                              endif
+  838              0.002553   if empty(g:airline#highlighter#normal_fg_hi) || g:airline#highlighter#normal_fg_hi < 0
+                                return a:colors
+                              endif
+                            
+  838              0.001889   for val in a:colors
+  838              0.002204     if !empty(val) && val !=# 'NONE'
+  838              0.000851       return a:colors
+                                endif
+                              endfor
+                              " this adds the bold attribute to the term argument of the :hi command,
+                              " but at least this makes sure, the group will be defined
+                              let fg = g:airline#highlighter#normal_fg_hi
+                              let bg = synIDattr(synIDtrans(hlID('Normal')), 'bg', 'cterm')
+                              if bg < 0
+                                " in case there is no background color defined for Normal
+                                let bg = a:colors[3]
+                              endif
+                              return a:colors[0:1] + [fg, bg] + [a:colors[4]]
+
+FUNCTION  <SNR>106_new_airline_ale_get_line_number()
+Called 142 times
+Total time:   0.000767
+ Self time:   0.000767
+
+count  total (s)   self (s)
+                              " The FirstProblem call in ALE is a far more efficient way
+                              " of obtaining line number data. If the installed ALE supports
+                              " it, we should use this method of getting line data.
+  142              0.000186   if a:cnt == 0
+  142              0.000166     return ''
+                              endif
+                              let l:buffer = bufnr('')
+                            
+                              " Try to get the first error from ALE.
+                              let l:result = ale#statusline#FirstProblem(l:buffer, a:type)
+                              if empty(l:result)
+                                " If there are no errors then try and check for style errors.
+                                let l:result =  ale#statusline#FirstProblem(l:buffer, 'style_' . a:type)
+                              endif
+                            
+                              if empty(l:result)
+                                  return ''
+                              endif
+                            
+                              let l:open_lnum_symbol  = get(g:, 'airline#extensions#ale#open_lnum_symbol', '(L')
+                              let l:close_lnum_symbol = get(g:, 'airline#extensions#ale#close_lnum_symbol', ')')
+                            
+                              return open_lnum_symbol . l:result.lnum . close_lnum_symbol
+
+FUNCTION  <SNR>102_hl_group_exists()
+Called 763 times
+Total time:   0.011484
+ Self time:   0.011484
+
+count  total (s)   self (s)
+  763              0.003968   if !hlexists(a:group)
+                                return 0
+                              elseif empty(synIDattr(hlID(a:group), 'fg'))
+                                return 0
+                              endif
+  763              0.000457   return 1
+
+FUNCTIONS SORTED ON TOTAL TIME
+count  total (s)   self (s)  function
+   81   0.461753   0.010755  airline#check_mode()
+   10   0.442512   0.059061  airline#highlighter#highlight()
+  588   0.323164   0.022619  <SNR>102_exec_separator()
+ 2014   0.269733   0.123904  airline#highlighter#get_highlight()
+  838   0.187995   0.044460  airline#highlighter#exec()
+ 1176   0.173644   0.010452  airline#themes#get_highlight()
+ 4028   0.129643             <SNR>102_get_syn()
+  108   0.075257   0.002619  airline#extensions#tabline#get_buffer_name()
+  108   0.072347   0.003378  airline#extensions#tabline#formatters#webdevicons#format()
+   72   0.050418   0.004046  airline#extensions#tabline#title()
+  108   0.043552   0.042513  WebDevIconsGetFileTypeSymbol()
+  108   0.025417   0.018872  airline#extensions#tabline#formatters#unique_tail#format()
+   11   0.019226   0.004105  4()
+  838   0.018794             <SNR>102_CheckDefined()
+  142   0.018257   0.008907  airline#extensions#ale#get()
+ 2014   0.016185             <SNR>102_get_array()
+  763   0.011484             <SNR>102_hl_group_exists()
+   71   0.011428   0.000963  airline#extensions#ale#get_warning()
+    8   0.011199   0.000605  matchup#delim#get_current()
+    8   0.010594   0.008005  <SNR>131_get_delim()
+
+FUNCTIONS SORTED ON SELF TIME
+count  total (s)   self (s)  function
+ 4028              0.129643  <SNR>102_get_syn()
+ 2014   0.269733   0.123904  airline#highlighter#get_highlight()
+   10   0.442512   0.059061  airline#highlighter#highlight()
+  838   0.187995   0.044460  airline#highlighter#exec()
+  108   0.043552   0.042513  WebDevIconsGetFileTypeSymbol()
+  588   0.323164   0.022619  <SNR>102_exec_separator()
+  108   0.025417   0.018872  airline#extensions#tabline#formatters#unique_tail#format()
+  838              0.018794  <SNR>102_CheckDefined()
+ 2014              0.016185  <SNR>102_get_array()
+  763              0.011484  <SNR>102_hl_group_exists()
+   81   0.461753   0.010755  airline#check_mode()
+ 1176   0.173644   0.010452  airline#themes#get_highlight()
+   81   0.010225   0.009870  airline#extensions#fugitiveline#bufname()
+  142   0.018257   0.008907  airline#extensions#ale#get()
+   71   0.010224   0.008167  airline#extensions#whitespace#check()
+    8   0.010594   0.008005  <SNR>131_get_delim()
+   75              0.006716  <SNR>102_GetHiCmd()
+  378              0.006544  airline#extensions#tabline#formatters#default#wrap_name()
+   81              0.005507  airline#util#ignore_buf()
+  142              0.005297  airline#extensions#coc#get()
+

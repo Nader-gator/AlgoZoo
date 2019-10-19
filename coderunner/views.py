@@ -1,31 +1,68 @@
 from django.shortcuts import render
-from .models import Test
+from .models import Test, Solution
 import os
 import types
 from django.conf import settings
 from django.urls import reverse
 from django.http import HttpResponseRedirect
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect
 from django.contrib import messages
-from .forms import NewUserForm, NewProblemForm
+from .forms import NewUserForm, NewProblemForm, NewSolutionForm
 from django.contrib.auth.decorators import login_required
+import datetime
+import random
 
 
 @login_required
 def home(request):
     tests = Test.objects.filter(user=request.user)
+    scores = {test: test.get_score() for test in tests}
+    score_groups = dict()
+    for test, score in scores.items():
+        if score in score_groups:
+            score_groups[score].append(test)
+        else:
+            score_groups[score] = [test]
+    sorted_scores = sorted(score_groups.keys())
+    if sorted_scores:
+        random.shuffle(score_groups[sorted_scores[0]])
+    tests = dict()
+    for score, group in score_groups.items():
+        for test in group:
+            tests[test] = score
     context = {'tests': tests}
     return render(request, 'coderunner/home.html', context)
 
 
 @login_required
 def code_display(request, code_id):
+    if request.method == 'POST':
+        record_result(request, code_id)
     test = Test.objects.get(id=code_id)
     test_path = os.path.join(settings.STATIC_ROOT,
                              f"EPIproblems/{test.get_file_name_display()}")
     test_file = open(test_path, 'r').readlines()
-    context = {'problem': ''.join(test_file), 'test': test, 'id': test.id}
+    solution_form = NewSolutionForm()
+    now = datetime.datetime.today()
+    context = {'problem': ''.join(test_file), 'solution_form': solution_form,
+               'test': test, 'id': test.id, 'time': f"{now.hour}:{now.minute}"}
     return render(request, 'coderunner/test.html', context)
+
+
+@login_required
+def record_result(request, code_id):
+    test = Test.objects.get(id=code_id)
+    now = datetime.datetime.today()
+    before_time = request.POST.get('time').split(':')
+    elapsed_minutes = ((now.hour - int(before_time[0])) * 60) + (now.minute - int(before_time[1]))
+    args = {'solved': bool(request.POST.get('solved', None)),
+            'solution': request.POST.get('answer', ''),
+            'attempt_date': datetime.date.today(),
+            'solved_time_minutes': elapsed_minutes,
+            'problem': test}
+    solution = Solution(**args)
+    solution.save()
+    messages.success(request, 'solution added')
 
 
 @login_required
